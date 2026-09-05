@@ -29,9 +29,9 @@
 
 ## 🛠️ 技術設計・実装方針 (Technical Notes / Design)
 
-- **クライアント (Vue 3)**:
-  - `frontend/src/stores/householdStore.ts`
-  - `frontend/src/components/settings/HouseholdSettingsModal.vue`
+- **クライアント (React 18)**:
+  - `frontend/src/hooks/useHousehold.ts`
+  - `frontend/src/components/settings/HouseholdSettingsModal.tsx`
 
 ---
 

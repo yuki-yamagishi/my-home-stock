@@ -1,5 +1,13 @@
 # [ISSUE-XXXX] タイトル
 
+> [!NOTE]
+> 各 Issue は独立したフォルダ `docs/issues/ISSUE-XXX_<title>/` を作成し、本テンプレートを `issue.md` として配置します。
+> ライフサイクルを通じて以下の 4 ドキュメントを管理・維持してください：
+> 1. `issue.md`（本仕様書）
+> 2. `pre_verification.md`（4軸事前検証ログ）
+> 3. `plan.md`（実装計画書）
+> 4. `walkthrough.md`（成果レポート・レビュー対応履歴）
+
 * **ステータス**: 🟡 `status: backlog` / 🟠 `status: todo` / 🔵 `status: ready` / 🟣 `status: in-progress` / ✅ `status: closed`
 * **種別**: 🟢 `type: feature` / 🔴 `type: bug` / 🟡 `type: refactor` / 🧪 `type: test` / 🤖 `type: harness` / 🚀 `type: ci` / 📘 `type: docs`
 * **担当者**: 未定 / AIエージェント / ユーザー名

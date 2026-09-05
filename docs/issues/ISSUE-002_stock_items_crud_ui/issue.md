@@ -11,7 +11,7 @@
 ## 📌 課題の概要・背景 (Problem Description / Context)
 
 バックエンド API（`StockItemController`）および OpenAPI 定義は稼働準備中であるが、ユーザーがスマートフォンや PC から在庫アイテムを一覧表示、新規登録、編集、削除（および数量消費）を行うためのフロントエンド UI を構築する必要があります。
-Vue 3 (Composition API / `<script setup>`) + Tailwind CSS v4 を用いた直感的で高速な在庫管理 UI を構築します。
+React 18 + TypeScript (Strict) + TanStack Query + Tailwind CSS + Radix UI を用いた直感的で高速な在庫管理 UI を構築します。
 
 ---
 
@@ -32,13 +32,13 @@ Vue 3 (Composition API / `<script setup>`) + Tailwind CSS v4 を用いた直感�
 
 ## 🛠️ 技術設計・実装方針 (Technical Notes / Design)
 
-- **フロントエンドコンポーネント (Vue 3)**:
-  - `frontend/src/components/stock/StockItemList.vue`
-  - `frontend/src/components/stock/StockItemCard.vue`
-  - `frontend/src/components/stock/StockItemFormModal.vue`
-- **状態管理 & 通信**:
-  - `frontend/src/stores/stockStore.ts` または `frontend/src/composables/useStockItems.ts`
-  - HTTP 409 競合時はトースト通知を表示し、最新データを再フェッチ。
+- **フロントエンドコンポーネント (React 18)**:
+  - `frontend/src/components/stock/StockItemList.tsx`
+  - `frontend/src/components/stock/StockItemCard.tsx`
+  - `frontend/src/components/stock/StockItemFormModal.tsx`
+- **データフェッチ & 状態管理**:
+  - `frontend/src/hooks/useStockItems.ts` (TanStack Query によるキャッシュ・楽観的更新・競合ハンドリング)
+  - HTTP 409 競合時はトースト通知を表示し、`queryClient.invalidateQueries(['stockItems'])` で最新データを再フェッチ。
 
 ---
 

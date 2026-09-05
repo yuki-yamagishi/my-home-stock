@@ -3,7 +3,7 @@
 - **ステータス**: 🟡 進行中 (`status: in_progress`)
 - **優先度**: 最高 (Critical / Foundation)
 - **カテゴリ**: `type: harness`, 開発基盤, ガバナンス, CI/CD, 自動化
-- **対象プラットフォーム**: Spring Boot 4 (Java 21) / Vue 3 (Vite, Tailwind v4) / Antigravity Agent / Git
+- **対象プラットフォーム**: Spring Boot 4 (Java 21) / React 18 (Vite, Tailwind CSS, TanStack Query) / Antigravity Agent / Git
 
 ---
 
@@ -11,7 +11,7 @@
 
 自律型AIエージェントおよび人間開発者による MyHomeStock プロジェクトの開発サイクル（要件定義 〜 事前検証 〜 実装 〜 テスト 〜 コミット 〜 プッシュ 〜 PR 〜 独立AIレビュー 〜 人間承認マージ）を、極めて高品質かつ安全に自律遂行できるようにするため、**堅牢な開発ハーネス・品質自動ガード機構・独立レビューエージェント** をセットアップします。
 
-先行リポジトリ（`job-eval`）で実証されたベストプラクティスをベースに、MyHomeStock の **Spring Boot 4 (Java 21, Maven) + Vue 3 (Vite, Tailwind CSS v4)** ハイブリッド構成に最適化した設計・実装を行います。
+先行リポジトリ（`job-eval`）で実証されたベストプラクティスをベースに、MyHomeStock の **Spring Boot 4 (Java 21, Maven) + React 18 (Vite, Tailwind CSS, TanStack Query)** ハイブリッド構成に最適化した設計・実装を行います。
 
 ---
 
@@ -31,7 +31,7 @@
 - **4ドキュメント・フォルダ完結型 Issue 構造** により、各機能の仕様・事前検証・計画・成果レポートを完全保全する。
 - **Fleet Reviewer Subagent** を新設し、客観的第三者による自動コードレビューを確立する。
 - **共有 Git Hooks (`.githooks/`)** により、セキュリティ・ドキュメント・テスト・ビルドの不合格コードの混入を物理的に阻止する。
-- **モジュール式チェッカー (`scripts/checkers/`)** により、Java と Vue の両方を包括した一括検証（`npm run check`）を実現する。
+- **モジュール式チェッカー (`scripts/checkers/`)** により、Java と React/TypeScript の両方を包括した一括検証（`npm run check`）を実現する。
 - **PR / Issue テンプレート** により、GitHub 上での開発・レビュー体験を標準化する。
 
 ---
@@ -103,7 +103,7 @@
 
 ## 5. 技術的論点 / 設計考慮事項 (Technical Notes)
 
-- **Spring Boot 4 (Maven) と Vue 3 (npm) の統合検証**:
+- **Spring Boot 4 (Maven) と React 18 (npm) の統合検証**:
   - `npm run check` において、フロントエンドの型検査・テスト・ビルドだけでなく、バックエンドのテスト（`mvnw test`）もスムーズに実行できる構成を担保する。
 - **Windows PowerShell と Git Bash の互換性**:
   - Git Hooks は Git for Windows の `sh` で動作するため、`npm.cmd` の呼び出しや stdin の空読み等、Windows 環境特有のハング・構文エラーを防止する。

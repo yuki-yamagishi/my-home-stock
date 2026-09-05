@@ -1,6 +1,6 @@
 # MyHomeStock AI駆動開発ハーネス規約 (AGENTS.md)
 
-本リポジトリは、**Spring Boot 4 (Java 21) + Vue 3 (TypeScript Strict, Composition API) + Vite + Tailwind CSS v4 + PostgreSQL 16 + PWA** で構築された、OCI 統合単一コンテナ / Single JAR アーキテクチャの自宅在庫・買い物リスト管理 Web/PWA アプリケーションです。
+本リポジトリは、**Spring Boot 4 (Java 21) + React 18 (TypeScript Strict) + Vite + Tailwind CSS + TanStack Query + PostgreSQL 16 + PWA** で構築された、OCI 統合単一コンテナ / Single JAR アーキテクチャの自宅在庫・買い物リスト管理 Web/PWA アプリケーションです。
 AI エージェントおよび開発者は、本ドキュメントに定められた **「AIアシスト Issue & PR + ADR + 独立Fleetレビュー + 自動品質ガード」** を厳格に遵守して開発を進めてください。
 
 ---
@@ -25,18 +25,18 @@ MyHomeStock/
 │   └── db/migration/                   # Flyway SQL マイグレーション (V1: 楽観排他+世帯ID)
 ├── src/test/                           # バックエンド単体・統合テスト
 │
-├── frontend/                           # Vue 3 + Vite + TypeScript (Strict) + Tailwind CSS v4 PWA
+├── frontend/                           # React 18 + Vite + TypeScript (Strict) + Tailwind CSS PWA
 │   ├── src/
 │   │   ├── core/                       # 純粋なビジネスロジック (在庫不足・賞味期限計算、UI/DOM非依存、100%単体テスト可能)
 │   │   ├── api/                        # OpenAPI 3.0 自動生成型 (schema.d.ts) および型安全 API クライアント (client.ts)
-│   │   ├── stores/                     # Pinia ストア (在庫、買い物リスト、世帯管理)
+│   │   ├── hooks/                      # TanStack Query カスタムフック (キャッシュ・楽観的更新・競合検知)
 │   │   ├── components/
 │   │   │   ├── ui/                     # 汎用 UI コンポーネント (Button, Card, Badge, Modal 等)
+│   │   │   ├── layout/                 # ヘッダー, PWA インストールバナー
 │   │   │   ├── stock/                  # 在庫管理機能コンポーネント
-│   │   │   ├── shopping/               # 買い物リスト機能コンポーネント
-│   │   │   └── layout/                 # ヘッダー, PWA インストールバナー
-│   │   ├── App.vue                     # メインレイアウト
-│   │   └── main.ts                     # Vue アプリ初期化 & Pinia & PWA 登録
+│   │   │   └── shopping/               # 買い物リスト機能コンポーネント
+│   │   ├── App.tsx                     # メインレイアウト・ダッシュボード
+│   │   └── main.tsx                    # React アプリ初期化 & QueryClientProvider & PWA 登録
 │   └── tests/                          # Vitest による単体・UIテスト
 │
 ├── docs/                               # 設計・検証資産 (完全日本語、Single Source of Truth)
@@ -144,7 +144,7 @@ npm run check
 1. **既存テストの弱体化・削除の厳禁**:
    - リファクタリングや機能追加時に既存テストが失敗した際、テストの期待値やアサーションを安易に書き換えて合格させてはなりません。
 2. **純粋コアロジックの不可侵**:
-   - `frontend/src/core/` 内で Vue や DOM、ブラウザ API を直接インポートしてはなりません。
+   - `frontend/src/core/` 内で React や DOM、ブラウザ API を直接インポートしてはなりません。
 3. **JPA 楽観的排他制御の厳守**:
    - 在庫データの更新時はエンティティの `@Version` を意識し、リクエストに `version` を含めて競合を検知してください。
 4. **世帯マルチテナント (`household_id`) の分離**:

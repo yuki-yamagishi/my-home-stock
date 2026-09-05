@@ -28,11 +28,11 @@
 
 ## 🛠️ 技術設計・実装方針 (Technical Notes / Design)
 
-- **フロントエンドコンポーネント (Vue 3)**:
-  - `frontend/src/components/shopping/ShoppingListView.vue`
-  - `frontend/src/components/shopping/ShoppingItemRow.vue`
+- **フロントエンドコンポーネント (React 18)**:
+  - `frontend/src/components/shopping/ShoppingListView.tsx`
+  - `frontend/src/components/shopping/ShoppingItemRow.tsx`
 - **キャッシュ戦略**:
-  - Pinia / Vue Query で `shopping-list` を管理。補充完了時は `stocks` も併せて更新・無効化。
+  - TanStack Query で `shopping-list` を管理。補充完了時は `queryClient.invalidateQueries(['shoppingList', 'stockItems'])` で在庫リストと買い物リストを連動更新・無効化。
 
 ---
 

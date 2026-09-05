@@ -95,4 +95,6 @@ Test Files  1 passed (1)
 | **`[imo]`** | **OpenAPI スキーマ型同期検知の自動化** | バックエンド API 変更時に `frontend/src/api/schema.d.ts` の型生成漏れを機械検知するチェッカーを新設し、`docCheck.js` に組み込み。 | `scripts/checkers/openapiSyncChecker.js`, `scripts/docCheck.js` |
 | **`[imo]`** | **チェッカー動的検出 & Git Hooks クロスプラットフォーム化** | `issueDocChecker.js` の対象 Issue ハードコードを廃止し、`implementation_plan.md` から動的判定。Git Hooks に Windows（`cmd.exe /c`）/ Linux フォールバックを追加。 | `scripts/checkers/issueDocChecker.js`, `.githooks/pre-commit`, `.githooks/pre-push` |
 | **`[nits]`** | **CI ランナー警告解消 & バックエンドパス修正** | GitHub Actions の Consolidated Single JAR ルートパス修正（`chmod +x mvnw`）、`setup-java@v5` へのアップグレード、Node.js 22 への引き上げ。 | `.github/workflows/ci.yml` |
+| **`[must]`** | **フロントエンド技術スタックの React 18 統一** | ユーザー決定（React 18 + TanStack Query）に基づき、AGENTS.md、スキル定義、全Issue仕様書、テンプレート、package.jsonのVue言及をReact 18 + TanStack Queryに完全統一。 | `AGENTS.md`, `package.json`, `.agents/skills/dev-harness/SKILL.md`, `docs/issues/*` |
+
 

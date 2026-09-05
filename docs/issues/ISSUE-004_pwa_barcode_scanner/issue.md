@@ -29,8 +29,8 @@
 
 - **データモデル**:
   - `StockItem` エンティティに `barcode VARCHAR(32)` カラムを追加（Flyway V2 マイグレーション予定）。
-- **コンポーネント (Vue 3)**:
-  - `frontend/src/components/scanner/BarcodeScannerModal.vue`
+- **コンポーネント (React 18)**:
+  - `frontend/src/components/scanner/BarcodeScannerModal.tsx`
 
 ---
 

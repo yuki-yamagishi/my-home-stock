@@ -1,11 +1,11 @@
 ---
 name: dev-harness
-description: Spring Boot 4 + Vue 3 PWA + PostgreSQL 向け AI駆動開発ハーネス、4ドキュメントIssue管理、Conventional Commits / Conventional Comments、Fleet 独立レビュー、ADR設計決定記録、ワンショット品質ゲート (npm run check) スキル。
+description: Spring Boot 4 + React 18 PWA + TanStack Query + PostgreSQL 向け AI駆動開発ハーネス、4ドキュメントIssue管理、Conventional Commits / Conventional Comments、Fleet 独立レビュー、ADR設計決定記録、ワンショット品質ゲート (npm run check) スキル。
 ---
 
 # MyHomeStock AI駆動開発・検証ハーネス スキル
 
-このスキルは、**Spring Boot 4 + Vue 3 + TypeScript + PWA + PostgreSQL** アプリケーションにおいて、**「Issue 4ドキュメント管理 + ADR + ワンショット品質ゲート (npm run check) + 独立レビューサブエージェント (Fleet)」** を用いて最高品質の開発・検証・PR作成を行うための公式ワークフローガイドです。
+このスキルは、**Spring Boot 4 + React 18 + TypeScript + TanStack Query + PWA + PostgreSQL** アプリケーションにおいて、**「Issue 4ドキュメント管理 + ADR + ワンショット品質ゲート (npm run check) + 独立レビューサブエージェント (Fleet)」** を用いて最高品質の開発・検証・PR作成を行うための公式ワークフローガイドです。
 
 ---
 

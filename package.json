@@ -23,7 +23,8 @@
   "keywords": [
     "pwa",
     "spring-boot",
-    "vue",
+    "react",
+    "tanstack-query",
     "typescript",
     "tailwind",
     "postgresql",
