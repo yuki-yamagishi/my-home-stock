@@ -2,14 +2,22 @@
 # Automated Security & Document Integrity Check before commit
 
 echo "🔒 [Git Hook] Running automated security & secret scan before commit..."
-cmd.exe /c "node scripts/securityCheck.js"
+if command -v cmd.exe >/dev/null 2>&1; then
+  cmd.exe /c "node scripts/securityCheck.js"
+else
+  node scripts/securityCheck.js
+fi
 if [ $? -ne 0 ]; then
   echo "❌ [Git Hook] Security scan FAILED. Commit aborted."
   exit 1
 fi
 
 echo "📝 [Git Hook] Running automated document integrity & completeness check..."
-cmd.exe /c "node scripts/docCheck.js"
+if command -v cmd.exe >/dev/null 2>&1; then
+  cmd.exe /c "node scripts/docCheck.js"
+else
+  node scripts/docCheck.js
+fi
 if [ $? -ne 0 ]; then
   echo "❌ [Git Hook] Document integrity check FAILED. Commit aborted."
   exit 1

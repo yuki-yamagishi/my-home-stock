@@ -49,15 +49,15 @@ export function checkIssueDocIntegrity(docsDir) {
     return false;
   }
 
-  // Find the latest issue folder (e.g. ISSUE-001_...)
-  const latestIssueDir = issueDirs[0]; // Active / in-progress issue
+  // Detect currently active issue from docs/implementation_plan.md
+  const implPlanPath = path.join(docsDir, 'implementation_plan.md');
+  const implPlanContent = fs.existsSync(implPlanPath) ? fs.readFileSync(implPlanPath, 'utf-8') : '';
 
   const FOUR_DOCS = ['issue.md', 'pre_verification.md', 'plan.md', 'walkthrough.md'];
   let validCount = 0;
 
   for (const dirName of issueDirs) {
     const dirPath = path.join(issuesDir, dirName);
-    const isCurrentActive = dirName === 'ISSUE-001_dev_harness_setup';
 
     // issue.md is mandatory for all issue folders
     const issueMdPath = path.join(dirPath, 'issue.md');
@@ -66,6 +66,12 @@ export function checkIssueDocIntegrity(docsDir) {
       hasError = true;
       continue;
     }
+
+    const issueMdContent = fs.readFileSync(issueMdPath, 'utf-8');
+    const isCurrentActive =
+      implPlanContent.includes(dirName) ||
+      issueMdContent.includes('status: in-progress') ||
+      issueMdContent.includes('status: in_progress');
 
     // For the active / in-progress issue, all 4 documents are strictly required
     if (isCurrentActive) {

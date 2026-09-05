@@ -26,17 +26,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21 (Eclipse Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
       - name: Grant execute permission for mvnw
-        run: chmod +x backend/mvnw
+        run: chmod +x mvnw
       - name: Run Backend Tests
-        run: |
-          cd backend
-          ./mvnw test
+        run: ./mvnw test
 
   frontend:
     name: Frontend Quality (TypeScript, Tests, PWA Build)
