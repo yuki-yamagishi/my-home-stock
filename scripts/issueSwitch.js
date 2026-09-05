@@ -70,7 +70,7 @@ const FOUR_DOCS = [
   },
   {
     name: 'walkthrough.md',
-    header: `# 実装成果レポート (Walkthrough) - ${targetPrefix}\n\n- **対象Issue**: ${issueTitle}\n- **ステータス**: 🟡 進行中 (\`status: in_progress\`)\n\n## 1. 成果サマリー\n- \n\n## 2. 検証結果\n- [ ] npm run check (PASS)\n`,
+    header: `# 実装成果レポート (Walkthrough) - ${targetPrefix}\n\n- **対象Issue**: ${issueTitle}\n- **ステータス**: 🟡 進行中 (\`status: in_progress\`)\n\n## 1. 成果サマリー\n- \n\n## 2. 検証結果\n- [ ] npm run check (PASS)\n\n## 3. レビュー指摘事項と改善対応履歴 (Review Feedback & Iterations)\n<!-- レビュー（自己レビュー、Fleetレビュー、人間レビュー）の指摘事項と改善対応履歴を必ず記録すること -->\n| 重要度 | 指摘・改善提案 | 対応内容 | 反映ファイル |\n| :--- | :--- | :--- | :--- |\n| \`[nits]\` | 初期実装完了 | 仕様・受け入れ基準に沿って実装完了 | - |\n`,
   },
 ];
 

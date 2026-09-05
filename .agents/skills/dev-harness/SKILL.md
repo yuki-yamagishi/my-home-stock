@@ -31,8 +31,9 @@ description: Spring Boot 4 + Vue 3 PWA + PostgreSQL 向け AI駆動開発ハー�
      - `issue.md`: 要件定義、背景、受け入れ基準
      - `pre_verification.md`: 4軸事前検証ログ
      - `plan.md`: 実装計画・変更対象ファイル一覧
-     - `walkthrough.md`: 実装成果レポート・検証ログ
+     - `walkthrough.md`: 実装成果レポート・検証ログ（※「レビュー指摘事項と改善対応履歴」セクションの記録が必須）
    - ルート `docs/`（`pre_phase_verification.md`, `implementation_plan.md`, `walkthrough.md`）には最新 Issue へのポインタを維持。
+   - `npm run issue:switch <ISSUE-ID>` で対象 Issue への自動切り替えとポインタ同期が可能。
 2. **設計決定記録 (`docs/adr/`)**:
    - アーキテクチャ変更や技術選定の理由・トレードオフを不変レコードとして蓄積。
    - `docs/adr/README.md` に必ず登録する。

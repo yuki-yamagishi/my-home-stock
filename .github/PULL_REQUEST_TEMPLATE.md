@@ -28,6 +28,7 @@ PR 作成前にローカル環境で検証を完了させてください：
 - [ ] **フロントエンドテスト**: `npm --prefix frontend run test:run` (PASS)
 - [ ] **プロダクションビルド**: `npm --prefix frontend run build` (PASS)
 - [ ] **バックエンドテスト**: `.\mvnw.cmd test` (全件 PASS)
+- [ ] **対応履歴の記録**: `walkthrough.md` にレビュー指摘事項と改善対応履歴が記録されていること
 - [ ] **ワンショット一括検査**: `npm run check` (全件合格)
 
 ---

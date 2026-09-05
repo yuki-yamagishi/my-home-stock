@@ -96,6 +96,26 @@ export function checkIssueDocIntegrity(docsDir) {
       }
     }
 
+    // Mandatory section checks for walkthrough.md (Iteration & Review Logging)
+    const walkthroughPath = path.join(dirPath, 'walkthrough.md');
+    if (fs.existsSync(walkthroughPath)) {
+      const wtContent = fs.readFileSync(walkthroughPath, 'utf-8');
+      const hasReviewSection =
+        wtContent.includes('レビュー指摘事項') ||
+        wtContent.includes('改善対応履歴') ||
+        wtContent.includes('Review Feedback') ||
+        wtContent.includes('対応履歴');
+      if (!hasReviewSection) {
+        console.error(
+          `\n❌ [成果レポート規約不備] ${dirName}/walkthrough.md に「レビュー指摘事項と改善対応履歴」セクションが存在しません。`
+        );
+        console.error(
+          '   👉 規約: すべてのタスク成果レポートには、レビュー指摘事項と改善対応の履歴を記録することが義務付けられています。'
+        );
+        hasError = true;
+      }
+    }
+
     validCount++;
   }
 
