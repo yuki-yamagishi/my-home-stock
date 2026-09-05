@@ -1,0 +1,10 @@
+name: "📘 ドキュメント・ADR (Docs)"
+description: 設計書・仕様書・ADRの作成・更新用 Issue
+labels: ["type: docs", "status: backlog"]
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: ドキュメント作業内容
+    validations:
+      required: true

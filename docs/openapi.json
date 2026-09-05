@@ -1,0 +1,404 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MyHomeStock REST API",
+    "description": "自宅在庫・買い物リスト管理 Web/PWA アプリケーション バックエンド API 仕様",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "ローカル開発サーバー"
+    }
+  ],
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": ["Health Check"],
+        "summary": "ヘルスチェック",
+        "description": "サーバーの稼働状態とタイムスタンプを返却します",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks": {
+      "get": {
+        "tags": ["Stock Items"],
+        "summary": "在庫アイテム一覧取得",
+        "operationId": "getStocks",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StockItemResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Stock Items"],
+        "summary": "在庫アイテム新規登録",
+        "operationId": "createStock",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockItemRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockItemResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/shopping-list": {
+      "get": {
+        "tags": ["Stock Items"],
+        "summary": "買い物リスト取得",
+        "operationId": "getShoppingList",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StockItemResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/expiring": {
+      "get": {
+        "tags": ["Stock Items"],
+        "summary": "期限切れ・間近アイテム取得",
+        "operationId": "getExpiringItems",
+        "parameters": [
+          {
+            "name": "daysAhead",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StockItemResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/{id}": {
+      "get": {
+        "tags": ["Stock Items"],
+        "summary": "在庫アイテム詳細取得",
+        "operationId": "getStockById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockItemResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Stock Items"],
+        "summary": "在庫アイテム更新（楽観的排他制御）",
+        "operationId": "updateStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockItemRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockItemResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Optimistic Locking Conflict"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Stock Items"],
+        "summary": "在庫アイテム削除",
+        "operationId": "deleteStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/stocks/{id}/consume": {
+      "post": {
+        "tags": ["Stock Items"],
+        "summary": "在庫消費（数量減算）",
+        "operationId": "consumeStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockItemResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "UP"
+          },
+          "service": {
+            "type": "string",
+            "example": "MyHomeStock Backend"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["status", "service", "timestamp"]
+      },
+      "StockItemRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "牛乳"
+          },
+          "category": {
+            "type": "string",
+            "example": "冷蔵食品"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 2
+          },
+          "unit": {
+            "type": "string",
+            "example": "本"
+          },
+          "minThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "memo": {
+            "type": "string",
+            "example": "低脂肪乳"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-09-30"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "example": 0
+          },
+          "householdId": {
+            "type": "string",
+            "example": "default"
+          }
+        },
+        "required": ["name", "quantity", "minThreshold"]
+      },
+      "StockItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "householdId": {
+            "type": "string",
+            "example": "default"
+          },
+          "name": {
+            "type": "string",
+            "example": "牛乳"
+          },
+          "category": {
+            "type": "string",
+            "example": "冷蔵食品"
+          },
+          "quantity": {
+            "type": "integer",
+            "example": 2
+          },
+          "unit": {
+            "type": "string",
+            "example": "本"
+          },
+          "minThreshold": {
+            "type": "integer",
+            "example": 1
+          },
+          "memo": {
+            "type": "string"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "example": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "name", "category", "quantity", "unit", "minThreshold", "version", "createdAt", "updatedAt"]
+      }
+    }
+  }
+}

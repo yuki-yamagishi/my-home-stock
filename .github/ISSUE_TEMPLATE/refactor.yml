@@ -1,0 +1,17 @@
+name: "🟡 リファクタリング (Refactor)"
+description: 機能仕様を変更せずに内部構造・保守性を改善するための Issue
+labels: ["type: refactor", "status: backlog"]
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的・背景
+      description: どのような保守性・可読性・パフォーマンス向上のためにリファクタリングを行うか記述してください。
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 対象範囲・ファイル
+    validations:
+      required: true

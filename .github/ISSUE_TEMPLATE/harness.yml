@@ -1,0 +1,11 @@
+name: "🤖 開発ハーネス・ガードレール改善 (Harness)"
+description: AIエージェント開発環境、検査スクリプト、CI/CD等の改善
+labels: ["type: harness", "status: backlog"]
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: 改善内容
+      description: どのようなスクリプト、ガードレール、規約を更新するか記載してください。
+    validations:
+      required: true
