@@ -5,10 +5,13 @@
   "description": "MyHomeStock - 自宅在庫・買い物リスト管理 Web/PWA アプリケーション開発ハーネス",
   "type": "module",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "check": "node scripts/securityCheck.js && node scripts/docCheck.js && npm --prefix frontend run type-check && npm --prefix frontend run test:run && npm --prefix frontend run build",
     "security-check": "node scripts/securityCheck.js",
     "doc-check": "node scripts/docCheck.js",
     "sync-api": "node scripts/syncApi.js",
+    "test:backend": "mvnw.cmd test",
+    "test:frontend": "npm --prefix frontend run test:run",
     "dev": "npm --prefix frontend run dev",
     "test": "npm --prefix frontend run test:run",
     "build": "npm --prefix frontend run build",
@@ -19,7 +22,7 @@
   "keywords": [
     "pwa",
     "spring-boot",
-    "react",
+    "vue",
     "typescript",
     "tailwind",
     "postgresql",

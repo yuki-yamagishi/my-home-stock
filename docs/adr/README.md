@@ -12,6 +12,7 @@
 | **[ADR-0005](0005-docker-local-db-and-cloud-deploy.md)** | Docker によるローカル PostgreSQL 環境と OCI / Cloudflare デプロイ | 承認済 | 2026-09-05 |
 | **[ADR-0006](0006-upgrade-to-spring-boot-4.md)** | Spring Initializr 公式仕様に基づく Spring Boot 4 系への全面移行 | 承認済 | 2026-09-05 |
 | **[ADR-0007](0007-consolidated-oci-single-jar.md)** | OCI統合単一コンテナ/Single JARアーキテクチャへの移行および世帯マルチテナント基盤の導入 | 承認済 | 2026-09-05 |
+| **[ADR-0008](0008-development-harness-and-quality-governance.md)** | 4ドキュメントIssue管理・モジュール式チェッカー・独立AIレビューによる開発ガバナンスハーネスの導入 | 承認済 | 2026-09-06 |
 
 ---
 

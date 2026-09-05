@@ -1,16 +1,16 @@
-# [ISSUE-004] 家族間マルチデバイス共有と世帯切り替え UI の実装
+# ISSUE-005: 家族間マルチデバイス共有と世帯切り替え UI の実装
 
-* **ステータス**: 🟡 `status: backlog`
-* **種別**: 🟢 `type: feature`
-* **担当者**: 未定
-* **作成日**: 2026-09-06
-* **関連 ADR / PR**: ADR-0007
+- **ステータス**: 🟡 `status: backlog`
+- **種別**: 🟢 `type: feature`
+- **担当者**: 未定
+- **作成日**: 2026-09-06
+- **関連 ADR**: ADR-0001, ADR-0002
 
 ---
 
 ## 📌 課題の概要・背景 (Problem Description / Context)
 
-ADR-0007 にて先行導入された `household_id` マルチテナント基盤を活用し、ユーザーが家族共有コード（世帯 ID）を発行・共有・入力することで、夫婦や家族のスマートフォン同士で同一の在庫リストをリアルタイムに共有・閲覧・同期できるようにする。
+`household_id` マルチテナント基盤を活用し、ユーザーが家族共有コード（世帯 ID）を発行・共有・入力することで、夫婦や家族のスマートフォン同士で同一の在庫リストをリアルタイムに共有・閲覧・同期できるようにします。
 
 ---
 
@@ -21,7 +21,7 @@ ADR-0007 にて先行導入された `household_id` マルチテナント基盤�
    - 新規世帯 ID の生成（UUID / 短縮ランダムコード）または既存世帯 ID の入力・参加機能。
 2. **ローカルストレージ保持 & ヘッダー自動送信**:
    - 参加中の世帯 ID をブラウザの `localStorage` に保持。
-   - API クライアント（`frontend/src/api/client.ts`）が自動的に `X-Household-Id` リクエストヘッダーに付与。
+   - API クライアントが自動的に `X-Household-Id` リクエストヘッダーに付与。
 3. **QRコード招待機能**:
    - 世帯参加 URL または世帯 ID の QR コードを表示し、家族のスマホカメラで即座に参加完了。
 
@@ -29,9 +29,9 @@ ADR-0007 にて先行導入された `household_id` マルチテナント基盤�
 
 ## 🛠️ 技術設計・実装方針 (Technical Notes / Design)
 
-- **クライアント**:
-  - `frontend/src/context/HouseholdContext.tsx`
-  - `frontend/src/components/settings/HouseholdSettingsModal.tsx`
+- **クライアント (Vue 3)**:
+  - `frontend/src/stores/householdStore.ts`
+  - `frontend/src/components/settings/HouseholdSettingsModal.vue`
 
 ---
 

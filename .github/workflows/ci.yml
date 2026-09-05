@@ -1,0 +1,66 @@
+name: MyHomeStock Quality & CI Gate
+
+on:
+  push:
+    branches: [master, main, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  quality-gate:
+    name: Security & Document Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run Secret Leak Scanner
+        run: node scripts/securityCheck.js
+      - name: Run Document Integrity Check
+        run: node scripts/docCheck.js
+
+  backend:
+    name: Backend Build & Tests (Spring Boot 4 / Java 21)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21 (Eclipse Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+      - name: Grant execute permission for mvnw
+        run: chmod +x backend/mvnw
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          ./mvnw test
+
+  frontend:
+    name: Frontend Quality (TypeScript, Tests, PWA Build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+      - name: TypeScript Strict Type Check
+        run: |
+          cd frontend
+          npm run type-check
+      - name: Vitest Unit Tests
+        run: |
+          cd frontend
+          npm run test:run
+      - name: Vite PWA Production Build
+        run: |
+          cd frontend
+          npm run build

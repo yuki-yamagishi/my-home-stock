@@ -1,16 +1,16 @@
-# [ISSUE-002] 買い物リスト自動生成 & 補充完了トグル機能の実装
+# ISSUE-003: 買い物リスト自動生成 & 補充完了トグル機能の実装
 
-* **ステータス**: 🟠 `status: todo`
-* **種別**: 🟢 `type: feature`
-* **担当者**: 未定
-* **作成日**: 2026-09-06
-* **関連 ADR / PR**: ADR-0003, ADR-0007
+- **ステータス**: 🟠 `status: todo`
+- **種別**: 🟢 `type: feature`
+- **担当者**: 未定
+- **作成日**: 2026-09-06
+- **関連 ADR**: ADR-0001, ADR-0002
 
 ---
 
 ## 📌 課題の概要・背景 (Problem Description / Context)
 
-在庫の数量が発注閾値（`minThreshold`）以下となった品目を自動的に「買い物リスト」として集約表示し、スーパーやドラッグストアでの買い物中にチェックを入れることで、在庫数量を補充（リセット）できるようにする。
+在庫の数量が発注閾値（`minThreshold`）以下となった品目を自動的に「買い物リスト」として集約表示し、スーパーやドラッグストアでの買い物中にチェックを入れることで、在庫数量を補充（リセット）できるようにします。
 
 ---
 
@@ -28,11 +28,11 @@
 
 ## 🛠️ 技術設計・実装方針 (Technical Notes / Design)
 
-- **フロントエンドコンポーネント**:
-  - `frontend/src/components/shopping/ShoppingListView.tsx`
-  - `frontend/src/components/shopping/ShoppingItemRow.tsx`
+- **フロントエンドコンポーネント (Vue 3)**:
+  - `frontend/src/components/shopping/ShoppingListView.vue`
+  - `frontend/src/components/shopping/ShoppingItemRow.vue`
 - **キャッシュ戦略**:
-  - TanStack Query の `shopping-list` キーで管理。補充完了時は `stocks` キーも併せて invalidation。
+  - Pinia / Vue Query で `shopping-list` を管理。補充完了時は `stocks` も併せて更新・無効化。
 
 ---
 
