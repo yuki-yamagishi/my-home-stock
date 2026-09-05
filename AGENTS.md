@@ -52,9 +52,11 @@ MyHomeStock/
 │   ├── checkers/                       # モジュール化された整合性チェッカー群
 │   │   ├── issueDocChecker.js          # docs/issues/ 4ドキュメントおよびルートポインタ整合性検証
 │   │   ├── adrChecker.js               # docs/adr/ 採番および目次同期検証
-│   │   └── agentSkillChecker.js        # AGENTS.md およびスキル定義同期検証
+│   │   ├── agentSkillChecker.js        # AGENTS.md およびスキル定義同期検証
+│   │   └── openapiSyncChecker.js       # docs/openapi.json と TypeScript 型定義の同期検証
 │   ├── securityCheck.js                # クレデンシャル・シークレット漏洩スキャナー
 │   ├── docCheck.js                     # 各種チェッカーを統括するオーケストレーター
+│   ├── issueSwitch.js                  # Issue ライフサイクル切り替え・自動ポインタ同期
 │   └── syncApi.js                      # SpringDoc OpenAPI -> TypeScript型自動同期
 │
 ├── .agents/                            # AIエージェント設定・カスタムサブエージェント

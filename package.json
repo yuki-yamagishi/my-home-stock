@@ -9,6 +9,7 @@
     "check": "node scripts/securityCheck.js && node scripts/docCheck.js && npm --prefix frontend run type-check && npm --prefix frontend run test:run && npm --prefix frontend run build",
     "security-check": "node scripts/securityCheck.js",
     "doc-check": "node scripts/docCheck.js",
+    "issue:switch": "node scripts/issueSwitch.js",
     "sync-api": "node scripts/syncApi.js",
     "test:backend": "mvnw.cmd test",
     "test:frontend": "npm --prefix frontend run test:run",

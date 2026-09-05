@@ -1,6 +1,6 @@
 /**
  * Automated Document & Harness Integrity Checker (Orchestrator)
- * Coordinates specialized checkers: adrChecker, agentSkillChecker, issueDocChecker
+ * Coordinates specialized checkers: adrChecker, agentSkillChecker, issueDocChecker, openapiSyncChecker
  */
 
 import path from 'path';
@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { checkAdrIntegrity } from './checkers/adrChecker.js';
 import { checkAgentSkillIntegrity } from './checkers/agentSkillChecker.js';
 import { checkIssueDocIntegrity } from './checkers/issueDocChecker.js';
+import { checkOpenApiSyncIntegrity } from './checkers/openapiSyncChecker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +30,10 @@ if (!agentSkillOk) allPassed = false;
 // 3. Check Issue Docs & Root Docs
 const issueDocOk = checkIssueDocIntegrity(DOCS_DIR);
 if (!issueDocOk) allPassed = false;
+
+// 4. Check OpenAPI Schema & TypeScript Type Synchronicity
+const openApiOk = checkOpenApiSyncIntegrity(PROJECT_ROOT);
+if (!openApiOk) allPassed = false;
 
 if (!allPassed) {
   console.error('\n🚫 Document & Harness Integrity Check FAILED: ドキュメントまたはハーネス設定に不整合が検知されました。\n');
