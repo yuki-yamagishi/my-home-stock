@@ -79,6 +79,20 @@ Test Files  1 passed (1)
 ```
 
 ### ⑤ GitHub Actions CI 全ジョブ合格
-- Security & Document Integrity: PASS
-- Backend Build & Tests (Spring Boot 4 / Java 21): PASS
-- Frontend Quality (TypeScript, Tests, PWA Build): PASS
+- Security & Document Integrity: PASS (7s)
+- Backend Build & Tests (Spring Boot 4 / Java 21): PASS (33s)
+- Frontend Quality (TypeScript, Tests, PWA Build): PASS (23s)
+
+---
+
+## 3. レビュー指摘事項と改善対応履歴 (Review Feedback & Iterations)
+
+ハーネス初期セットアップ完了後、独立レビュー（Fleet Reviewer 観点）で洗い出された改善提案 4 件を即座に対応・反映しました：
+
+| 重要度 | 指摘・改善提案 | 対応内容 | 反映ファイル |
+| :--- | :--- | :--- | :--- |
+| **`[should]`** | **Issue 進行時のステータス同期自動化** | `npm run issue:switch <ISSUE-ID>` CLI を新設。対象 Issue の 4 ドキュメント雛形生成、ルートポインタ更新、README 表の `in-progress` 更新をワンコマンドで自動実行。 | `scripts/issueSwitch.js`, `package.json` |
+| **`[imo]`** | **OpenAPI スキーマ型同期検知の自動化** | バックエンド API 変更時に `frontend/src/api/schema.d.ts` の型生成漏れを機械検知するチェッカーを新設し、`docCheck.js` に組み込み。 | `scripts/checkers/openapiSyncChecker.js`, `scripts/docCheck.js` |
+| **`[imo]`** | **チェッカー動的検出 & Git Hooks クロスプラットフォーム化** | `issueDocChecker.js` の対象 Issue ハードコードを廃止し、`implementation_plan.md` から動的判定。Git Hooks に Windows（`cmd.exe /c`）/ Linux フォールバックを追加。 | `scripts/checkers/issueDocChecker.js`, `.githooks/pre-commit`, `.githooks/pre-push` |
+| **`[nits]`** | **CI ランナー警告解消 & バックエンドパス修正** | GitHub Actions の Consolidated Single JAR ルートパス修正（`chmod +x mvnw`）、`setup-java@v5` へのアップグレード、Node.js 22 への引き上げ。 | `.github/workflows/ci.yml` |
+

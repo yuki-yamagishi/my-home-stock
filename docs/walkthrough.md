@@ -14,6 +14,7 @@
 - 共有 Git Hooks（`.githooks/pre-commit`, `.githooks/pre-push`）をクロスプラットフォーム対応で配備。
 - AI 独立レビューサブエージェント（Fleet Reviewer）および PR テンプレートを整備。
 - ADR-0008 策定および GitHub Actions CI（Node 22, JDK 21）の全ジョブ合格を確認。
+- **レビュー指摘事項 4 点（Issue 切り替え CLI、OpenAPI 同期チェッカー、動的 Issue 判定/クロスプラットフォーム Hooks、CI Node 22）の対応履歴を記録。**
 
 ### 検証結果
 - `node scripts/securityCheck.js`: 100% PASS (0 secrets)
