@@ -18,11 +18,17 @@
      - **専用 Hooks (`hooks.json` & `hooks/openapiSyncGuard.js`)**: コミット・PR作成時の OpenAPI 仕様と TypeScript 型の同期を物理ガード（乖離時に `deny`）。
      - **専用 Subagent (`agents/stock_domain_auditor.md`)**: 4 大ドメイン原則の遵守を批判的・客観的に専門監査する第三者サブエージェント。
      - **専用 Skills (`skills/sync-api/`, `skills/db-workflow/`)**: OpenAPI 型自動同期および Docker PostgreSQL 運用 Runbook をオンデマンド提供。
-2. **不要なメタチェッカーの完全撤廃**:
+2. **ルート `scripts/` の完全撤廃と AGY プリミティブへの構造的リファクタリング**:
+   - ルートに存在していた `scripts/` ディレクトリ（8ファイル）を完全削除。
+   - スクリプトが担っていた関心事を AGY 公式プリミティブへと再設計：
+     - **Hooks (`hooks/`)**: `qualityGateRunner.js`, `secretLeakGuard.js`, `pluginDeploymentGuard.js`, `docIntegrityGuard.js`, `openapiSyncGuard.js` へ集約。
+     - **Skills (`skills/*/scripts/`)**: `sync-api/scripts/sync.js`, `issue-workflow/scripts/switch.js` へ内包。
+   - `package.json`, `.github/workflows/ci.yml`, `.githooks/pre-commit` がプラグイン内部の Hooks を直接利用する構成に一元化。
+3. **不要なメタチェッカーの完全撤廃**:
    - `scripts/checkers/agentSkillChecker.js` を削除し、Antigravity ネイティブのプラグイン機構に委譲。「テストのためのテスト」という保守負債を完全根絶。
-3. **MyHomeStock 側の旧重複機能の完全削除**:
+4. **MyHomeStock 側の旧重複機能の完全削除**:
    - 旧ハーネススキル（`.agents/skills/dev-harness/`）および旧サブエージェント（`.agents/subagents/fleet-reviewer/`）を完全削除。
-4. **ADR-0009 策定および AGENTS.md のスリム化**:
+5. **ADR-0009 策定および AGENTS.md のスリム化**:
    - ドメイン制約の詳細をプラグイン `rules/` に移譲し、リポジトリ全体のエントリーポイントとして整備。
 
 ---
@@ -31,12 +37,12 @@
 
 - [x] Git Submodule 正常登録 (`git submodule status`)
 - [x] プラグイン無修正確認 (`git -C .agents/plugins/antigravity-review-loop status` が clean)
-- [x] 専用プラグイン正常配置 (`.agents/plugins/myhomestock/` の plugin.json, rules, hooks, skills, agents)
-- [x] Submodule 未展開リスクの物理封じ込め (`scripts/checkers/pluginChecker.js` を `docCheck.js` に統合)
-- [x] GitHub Actions CI (`.github/workflows/ci.yml`) における `submodules: recursive` 設定
+- [x] 専用プラグイン完全配備 (`.agents/plugins/myhomestock/` の plugin.json, rules, hooks, skills, agents)
+- [x] ルート `scripts/` 完全撤廃 (0ファイル化・完全クリーン)
+- [x] プラグイン Hooks 統合ランナー (`qualityGateRunner.js`) の動作確認
+- [x] GitHub Actions CI (`.github/workflows/ci.yml`) における `qualityGateRunner.js` 直接実行
 - [x] `npm.cmd run check` 全件 PASS:
-  - シークレットスキャン (PASS)
-  - プラグイン & ドキュメント整合性検証 (PASS: Plugin, ADR, IssueDoc, OpenApiSync)
+  - プラグイン Guards (PASS: Secrets, Submodule Deployment, ADR & Issue 4-Doc, OpenAPI Sync)
   - TypeScript 型検査 (PASS)
   - Vitest 単体テスト (PASS)
   - Vite + PWA プロダクションビルド (PASS)
@@ -49,12 +55,11 @@
 | :--- | :--- | :--- | :--- |
 | `[must]` | プラグイン内部のコード修正の絶対禁止 | `.agents/plugins/antigravity-review-loop` のファイルは一切変更せず、MyHomeStock 側のスクリプト・設定のみを適合させた | 全体 |
 | `[must]` | 重複機能の完全削除 | 旧 `dev-harness` スキルおよび旧 `fleet-reviewer` サブエージェントを `git rm` で削除し、プラグイン公式機能に一本化した | `.agents/` |
-| `[must]` | ハーネス整合性チェックの必要性再考と撤廃 | 文字列一致のメタ検査（`agentSkillChecker.js`）は保守負債となるため完全削除し、Antigravity ネイティブ機構に委譲した | `scripts/checkers/agentSkillChecker.js`, `scripts/docCheck.js` |
 | `[must]` | AGY ベストプラクティスに基づく専用プラグイン化 | `.agents/plugins/myhomestock/` を新設し、専用 Hook（`openapi-sync-guard`）、専用 Subagent（`stock_domain_auditor`）、専用 Rules（`domain-constraints.md`）、専用 Skills（`sync-api`, `db-workflow`）を体系的に配備した | `.agents/plugins/myhomestock/` |
-| `[must]` | Submodule 未展開リスクの物理封じ込め (Fleet監査指摘) | 空ディレクトリによるサイレントバイパスを防ぐため、`scripts/checkers/pluginChecker.js` を新設して `docCheck.js` に統合。未初期化時はエラー案内とともに即時ブロック | `scripts/checkers/pluginChecker.js`, `scripts/docCheck.js` |
+| `[must]` | Submodule 未展開リスクの物理封じ込め (Fleet監査指摘) | 空ディレクトリによるサイレントバイパスを防ぐため、`pluginDeploymentGuard.js` を配備して `qualityGateRunner.js` に統合。未初期化時はエラー案内とともに即時ブロック | `pluginDeploymentGuard.js`, `qualityGateRunner.js` |
+| `[must]` | ルート scripts/ の完全撤廃と構造的リファクタリング (ユーザー指摘) | `scripts/` をプラグインへ無理やり移設するのではなく、AGY の公式プリミティブ（Hooks/Skills）へと構造から再設計。`scripts/` を完全撤廃し、Hooks (`hooks/`) と Skills (`skills/*/scripts/`) に昇華させた | `hooks/`, `skills/`, ルート `scripts/` (削除) |
 | `[should]` | GitHub Actions CI における Submodule チェックアウト漏れ (Fleet監査指摘) | CI 環境で Submodule が空となり検査落ちするリスクを防ぐため、`.github/workflows/ci.yml` の各ジョブに `submodules: recursive` を追加 | `.github/workflows/ci.yml` |
 | `[should]` | ルールとスキルの責務分離 (Rules vs Skills) | 常時制約（JPA楽観排他、世帯分離等）を `rules/` に、オンデマンド手順（型同期等）を `skills/` に厳格に分離した | `.agents/plugins/myhomestock/rules/`, `skills/` |
-| `[nits]` | Inner Loop コマンドの互換性向上 | プラグインの `dev-lifecycle` で推奨される `check:fast`, `test:fast`, `test:related` を `package.json` に追加 | `package.json` |
-| `[nits]` | Issue 4 ドキュメント間の文言整合 (Fleet監査指摘) | `issue.md`, `pre_verification.md`, `plan.md` における旧チェッカー記述を、実態である `pluginChecker.js` に整合化 | `docs/issues/ISSUE-006_.../` |
+| `[nits]` | Inner Loop コマンドの互換性向上 | プラグインの `dev-lifecycle` で推奨される `check:fast`, `check:docs`, `test:fast`, `test:related` を `package.json` に追加 | `package.json` |
 
 

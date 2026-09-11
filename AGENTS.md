@@ -48,17 +48,6 @@ MyHomeStock/
 │   ├── architecture.md                 # システム全体アーキテクチャ設計書
 │   └── openapi.json                    # OpenAPI 3.0 仕様書ベースライン
 │
-├── scripts/                            # 自動検査・型同期スクリプト
-│   ├── checkers/                       # モジュール化された整合性チェッカー群
-│   │   ├── pluginChecker.js            # Submodule 配備 & プラグイン整合性物理検証
-│   │   ├── issueDocChecker.js          # docs/issues/ 4ドキュメントおよびルートポインタ整合性検証
-│   │   ├── adrChecker.js               # docs/adr/ 採番および目次同期検証
-│   │   └── openapiSyncChecker.js       # docs/openapi.json と TypeScript 型定義の同期検証
-│   ├── securityCheck.js                # クレデンシャル・シークレット漏洩スキャナー
-│   ├── docCheck.js                     # 各種チェッカーを統括するオーケストレーター
-│   ├── issueSwitch.js                  # Issue ライフサイクル切り替え・自動ポインタ同期
-│   └── syncApi.js                      # SpringDoc OpenAPI -> TypeScript型自動同期
-│
 ├── .agents/plugins/                    # Antigravity プラグイン群 (Composable Plugins)
 │   ├── antigravity-review-loop/        # 【汎用ガバナンス】Git Submodule (無修正)
 │   │   ├── hooks.json                  # 物理ライフサイクルフック (DoR Gate, Safety Guard, Pre-PR Gate, Stop Hook)
@@ -67,19 +56,28 @@ MyHomeStock/
 │   │   └── agents/                     # 汎用合議 (fleet_reviewer, fleet_completion_auditor, fleet_dor_auditor)
 │   └── myhomestock/                    # 【MyHomeStock 専用プラグイン】(AGY公式仕様完全準拠)
 │       ├── plugin.json                 # プラグインマニフェスト
-│       ├── hooks.json                  # 専用フック (openapi-sync-guard: 型同期物理ガード)
+│       ├── hooks.json                  # 専用フック定義 (openapi-sync-guard)
+│       ├── hooks/                      # 物理ガード群 & CI/CLI統合ランナー (旧 scripts/ を完全昇華)
+│       │   ├── qualityGateRunner.js    # CI / npm run check 統合ランナー
+│       │   ├── openapiSyncGuard.js     # OpenAPI 型同期物理ガード
+│       │   ├── pluginDeploymentGuard.js # Submodule & プラグイン展開物理ガード
+│       │   ├── docIntegrityGuard.js    # ADR & Issue 4ドキュメント整合性物理ガード
+│       │   └── secretLeakGuard.js      # シークレット漏洩物理ガード
 │       ├── rules/domain-constraints.md # ドメイン不変則 (JPA楽観排他, 世帯分離, コアロジック不可侵)
-│       ├── skills/                     # 専用 Runbook (sync-api, db-workflow)
+│       ├── skills/                     # 専用 Runbook & 付属自動化スクリプト
+│       │   ├── sync-api/               # 型同期 (SKILL.md & scripts/sync.js)
+│       │   ├── db-workflow/            # DB運用 (SKILL.md)
+│       │   └── issue-workflow/         # Issue切り替え (SKILL.md & scripts/switch.js)
 │       └── agents/stock_domain_auditor.md # ドメイン整合性・4大原則専門監査役
 │
-├── .githooks/                          # 共有 Git Hooks
-│   ├── pre-commit                      # シークレットスキャン + ドキュメント整合性検証
+├── .githooks/                          # 共有 Git Hooks (プラグインの Hooks を直接呼び出し)
+│   ├── pre-commit                      # プラグイン qualityGateRunner.js による検証
 │   └── pre-push                        # 全体品質ゲート (npm run check)
 │
 ├── Dockerfile                          # Multi-stage build (JDK ビルド -> JRE 実行最小コンテナ)
 ├── docker-compose.yml                  # PostgreSQL 16 + Single JAR アプリ統合サービス
 ├── pom.xml                             # ルート Maven ビルド (frontend-maven-plugin による静的資産内包)
-├── package.json                        # ルート統合スクリプト (npm run check, dev, sync-api 等)
+├── package.json                        # ルート統合スクリプト (プラグインの Hooks/Skills を直接指定)
 └── AGENTS.md                           # AIエージェント開発ルール・規約 (本ドキュメント)
 ```
 
@@ -117,7 +115,7 @@ MyHomeStock/
 
 ### ③ ADR（設計決定記録）の作成
 - アーキテクチャ変更や新しい設計方針を導入する場合は、`docs/adr/000X-xxx.md` を作成。
-- `docs/adr/README.md` の一覧テーブルに必ず登録（`node scripts/docCheck.js` で自動検証）。
+- `docs/adr/README.md` の一覧テーブルに必ず登録（`npm run check:docs` で自動検証）。
 
 ### ④ Inner Loop（開発中高速反復）と Outer Loop（PR前一括検証）の分離
 思考のテンポと開発生産性を極大化するため、**軽微な修正のたびに重い本番ビルドを伴う `npm run check` を連発することを厳禁とします**（グローバル憲章第 2.1 条）。
@@ -134,10 +132,10 @@ MyHomeStock/
        ```
      - **ドキュメント整合性のみ確認 (約0.2秒)**:
        ```bash
-       node scripts/docCheck.js
+       npm.cmd run check:docs
        ```
    - **TDD中間コミット時**:
-     - Git Pre-Commit Hook (`.githooks/pre-commit`) により、シークレット漏洩とドキュメント整合性が自動検証されます。手動で重い全量チェックを叩く必要はありません。
+     - Git Pre-Commit Hook (`.githooks/pre-commit`) により、プラグインの `qualityGateRunner.js` がシークレット漏洩とドキュメント整合性を自動検証します。手動で重い全量チェックを叩く必要はありません。
 
 2. **Outer Loop（PR作成直前・プッシュ前・CI）**:
    - すべての実装・テストが完了し、**PRを作成する直前の最終関門としてのみ 1 回実行**します：
@@ -145,11 +143,10 @@ MyHomeStock/
      npm.cmd run check
      ```
    - 実行される自動検証：
-     1. `securityCheck.js`: 秘密情報・APIキー・クレデンシャル混入検知
-     2. `docCheck.js`: ADR、Issue 4ドキュメント、OpenAPI型同期の整合性検証
-     3. `type-check`: TypeScript Strict 型検査
-     4. `test:run`: 単体テスト・UIテスト全件
-     5. `build`: Vite プロダクションビルド・PWA Manifest 生成検証
+     1. `qualityGateRunner.js`: シークレットスキャン、プラグイン配備、ADR、Issue 4ドキュメント、OpenAPI型同期の統合物理検証
+     2. `type-check`: TypeScript Strict 型検査
+     3. `test:run`: 単体テスト・UIテスト全件
+     4. `build`: Vite プロダクションビルド・PWA Manifest 生成検証
    - ※ リモートプッシュ時には Git Pre-Push Hook により `npm.cmd run check` が自動強制されます。
 
 ### ⑤ 独立レビューサブエージェント合議制 (Fleet Review Consortium)

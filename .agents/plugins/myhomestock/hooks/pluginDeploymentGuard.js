@@ -1,14 +1,15 @@
 /**
- * Antigravity Plugin & Submodule Integrity Checker
- * Verifies that the git submodule (.agents/plugins/antigravity-review-loop)
- * and the custom plugin (.agents/plugins/myhomestock) are properly deployed and initialized.
+ * Plugin Deployment Guard (.agents/plugins/myhomestock/hooks/pluginDeploymentGuard.js)
+ * Verifies that the Git Submodule (antigravity-review-loop) and the custom plugin (myhomestock)
+ * are properly initialized, deployed, and not in an uninitialized/empty bypass state.
  */
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-export function checkPluginIntegrity(projectRoot) {
-  console.log('  🔍 [Plugin Checker] Antigravity プラグイン & Submodule 配備状況の検証...');
+export function checkPluginDeployment(projectRoot) {
+  console.log('  🔍 [Plugin Guard] Antigravity プラグイン & Submodule 配備状況の検証...');
   let hasError = false;
 
   const pluginsDir = path.resolve(projectRoot, '.agents', 'plugins');
@@ -20,7 +21,7 @@ export function checkPluginIntegrity(projectRoot) {
   const reviewLoopHooksJson = path.join(reviewLoopDir, 'hooks.json');
 
   if (!fs.existsSync(reviewLoopDir) || !fs.existsSync(reviewLoopPluginJson) || !fs.existsSync(reviewLoopHooksJson)) {
-    console.error('\n❌ [Plugin Checker] Git Submodule (.agents/plugins/antigravity-review-loop) が初期化・展開されていません。');
+    console.error('\n❌ [Plugin Guard] Git Submodule (.agents/plugins/antigravity-review-loop) が初期化・展開されていません。');
     console.error('   👉 解決コマンド: git submodule update --init --recursive を実行してください。\n');
     hasError = true;
   }
@@ -30,7 +31,7 @@ export function checkPluginIntegrity(projectRoot) {
   const myHomeStockConstraints = path.join(myHomeStockDir, 'rules', 'domain-constraints.md');
 
   if (!fs.existsSync(myHomeStockDir) || !fs.existsSync(myHomeStockPluginJson) || !fs.existsSync(myHomeStockConstraints)) {
-    console.error('\n❌ [Plugin Checker] MyHomeStock 専用プラグイン (.agents/plugins/myhomestock) のマニフェストまたは不変則ルールが不足しています。');
+    console.error('\n❌ [Plugin Guard] MyHomeStock 専用プラグイン (.agents/plugins/myhomestock) のマニフェストまたは不変則ルールが不足しています。');
     hasError = true;
   }
 
@@ -40,4 +41,14 @@ export function checkPluginIntegrity(projectRoot) {
 
   console.log('    ✓ プラグインおよび Submodule は正常に展開されています。');
   return true;
+}
+
+// Standalone execution support
+const isDirectExecution = process.argv[1] &&
+  path.resolve(process.argv[1]).toLowerCase() === path.resolve(fileURLToPath(import.meta.url)).toLowerCase();
+
+if (isDirectExecution) {
+  const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+  const ok = checkPluginDeployment(rootDir);
+  process.exit(ok ? 0 : 1);
 }

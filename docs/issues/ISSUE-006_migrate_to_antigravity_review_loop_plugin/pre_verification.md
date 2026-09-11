@@ -16,9 +16,9 @@
 
 ### 1.2. UX・エッジケース
 - **新規開発者の環境セットアップ**:
-  - `git clone` 直後は submodule が空ディレクトリとなる可能性があるため、`pluginChecker.js`（`docCheck.js` 経由）で `git submodule update --init --recursive` の案内を自動表示し、ビルドや品質ゲートで明瞭に通知・ブロックする。
+  - `git clone` 直後は submodule が空ディレクトリとなる可能性があるため、プラグインの `qualityGateRunner.js`（`pluginDeploymentGuard.js`）で `git submodule update --init --recursive` の案内を自動表示し、ビルドや品質ゲートで明瞭に通知・ブロックする。
 - **Inner Loop 高速反復**:
-  - プラグインの `dev-lifecycle` スキルで定義されている `npm run check:fast`, `npm run test:fast`, `npm run test:related` を `package.json` に定義し、開発者の思考テンポを損なわない。
+  - `npm run check:fast`, `npm run check:docs`, `npm run test:fast`, `npm run test:related` を `package.json` に定義し、開発者の思考テンポを損なわない。
 
 ### 1.3. データ永続性・互換性
 - **4ドキュメント構造との完全互換**:
@@ -26,7 +26,7 @@
 
 ### 1.4. テスト自律性
 - **品質ゲートの自律検証**:
-  - `npm.cmd run check` により、シークレットスキャン、Submodule配備・プラグイン整合性検証（`pluginChecker.js`）、ADR整合性、Issue整合性、TypeScript型検査、単体テスト、本番ビルドをワンショットで自律実行可能。
+  - `npm.cmd run check` により、プラグインの `qualityGateRunner.js`（シークレットスキャン、プラグイン展開、ADR、Issue、OpenAPI型同期）とフロントエンド型検査・テスト・ビルドをワンショットで自律実行可能。
 
 ---
 
@@ -37,8 +37,8 @@
   - プラグイン側の `skills/issue-lifecycle/`, `skills/dev-lifecycle/`, `skills/review-self-healing/` がより包括的かつ厳密に定義しているため、100% 重複。削除して一本化。
 - **旧サブエージェント (`.agents/subagents/fleet-reviewer/`)**:
   - プラグイン側の `agents/fleet_reviewer.md`, `agents/fleet_completion_auditor.md`, `agents/fleet_dor_auditor.md` が合議制および反証義務を含めて高度に体系化されているため、100% 重複。削除して一本化。
-- **チェッカー (`scripts/checkers/pluginChecker.js`)**:
-  - 旧重厚チェッカー `agentSkillChecker.js`（保守負債）を撤廃し、Submodule 未展開リスクを物理排除する軽量 `pluginChecker.js` を新設。パッチワークではなく責務を根本的に刷新。
+- **旧スクリプト群 (`scripts/`)**:
+  - 単なるファイル移設ではなく、スクリプトの関心事をプラグインの `hooks/`（物理ガード群）および `skills/*/scripts/`（作業手順付属スクリプト）へと構造的に再設計。`scripts/` を完全撤廃し、二重管理を根絶。
 
 ### 2.2. 車輪の再発明・つぎはぎ改修の防止
-- プロジェクト内に独自のレビューループやフック機構を個別追加・再発明せず、公式プラグイン `antigravity-review-loop` を Submodule としてそのまま活用する。
+- プロジェクト内に独自のレビューループやフック機構を個別追加・再発明せず、公式プラグイン `antigravity-review-loop` を Submodule として活用し、プロジェクト固有の関心事は `myhomestock` プラグイン内に完全カプセル化する。

@@ -1,27 +1,17 @@
 #!/bin/sh
-# Automated Security & Document Integrity Check before commit
+# Automated Quality Gate Guards before commit (.githooks/pre-commit)
 
-echo "🔒 [Git Hook] Running automated security & secret scan before commit..."
+echo "🏛️ [Git Hook] Running MyHomeStock Quality Gate Guards before commit..."
 if command -v cmd.exe >/dev/null 2>&1; then
-  cmd.exe /c "node scripts/securityCheck.js"
+  cmd.exe /c "node .agents/plugins/myhomestock/hooks/qualityGateRunner.js"
 else
-  node scripts/securityCheck.js
+  node .agents/plugins/myhomestock/hooks/qualityGateRunner.js
 fi
+
 if [ $? -ne 0 ]; then
-  echo "❌ [Git Hook] Security scan FAILED. Commit aborted."
+  echo "❌ [Git Hook] Quality gate check FAILED. Commit aborted."
   exit 1
 fi
 
-echo "📝 [Git Hook] Running automated document integrity & completeness check..."
-if command -v cmd.exe >/dev/null 2>&1; then
-  cmd.exe /c "node scripts/docCheck.js"
-else
-  node scripts/docCheck.js
-fi
-if [ $? -ne 0 ]; then
-  echo "❌ [Git Hook] Document integrity check FAILED. Commit aborted."
-  exit 1
-fi
-
-echo "✅ [Git Hook] All security and document integrity checks passed. Proceeding with commit."
+echo "✅ [Git Hook] All quality gate guards passed. Proceeding with commit."
 exit 0

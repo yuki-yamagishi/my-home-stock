@@ -30,8 +30,8 @@
    - 重複していた `.agents/skills/dev-harness/` および `.agents/subagents/fleet-reviewer/` を MyHomeStock から削除し、プラグイン公式機能に一本化する。
 2. **プラグイン修正によるアップストリーム破壊リスクの完全排除**:
    - プラグイン側のコードには一切手を加えず、Git Submodule として純粋にマウントする。
-3. **Submodule 未展開・不整合リスクの排除**:
-   - 過剰な文字列照合（保守負債）を撤廃し、Submodule の未展開リスクを物理的に検証・ブロックする軽量チェッカー `scripts/checkers/pluginChecker.js` を新設して `scripts/docCheck.js` に統合する。
+3. **ルート `scripts/` の完全撤廃とプラグイン Hooks / Skills への構造的リファクタリング**:
+   - ルートの `scripts/` に散らばっていたスクリプト群を完全撤廃（0ファイル化）し、AGY の公式プリミティブ（Hooks / Skills）へ構造的に再編・カプセル化する。
 
 ---
 
@@ -47,10 +47,10 @@
 - **When**: 旧定義パスを検証したとき
 - **Then**: `.agents/skills/dev-harness/` および `.agents/subagents/fleet-reviewer/` が完全に削除されていること。
 
-### シナリオ 3: ハーネス整合性チェッカーおよび品質ゲートの全件合格
-- **Given**: プラグイン導入および重複削除後のコードベースにおいて
+### シナリオ 3: プラグイン Hooks ランナーによる品質ゲート全件合格
+- **Given**: プラグイン Hooks への構造的リファクタリング完了後のコードベースにおいて
 - **When**: `npm.cmd run check` を実行したとき
-- **Then**: `securityCheck.js`, `pluginChecker.js`（Submodule配備・プラグイン整合性検証）, `docCheck.js`, フロントエンド型検査, 単体テスト, プロダクションビルドの全検査が 100% PASS すること。
+- **Then**: プラグイン Hooks（`qualityGateRunner.js` によるセキュリティ、プラグイン展開、ADR・Issue4ドキュメント、OpenAPI型同期の統合検証）、フロントエンド型検査、単体テスト、プロダクションビルドの全検査が 100% PASS すること。
 
 ---
 
@@ -61,9 +61,9 @@
 - [x] プラグイン内部のコード・ファイルが一切修正されていないこと（無修正の厳守）。
 - [x] `.agents/skills/dev-harness/` が削除されていること。
 - [x] `.agents/subagents/fleet-reviewer/` が削除されていること。
-- [x] 旧重厚チェッカー `scripts/checkers/agentSkillChecker.js` を撤廃し、Submodule 未展開リスクを物理排除する軽量 `pluginChecker.js` を新設・配備していること。
-- [x] CI ワークフロー (`.github/workflows/ci.yml`) において `submodules: recursive` が指定されていること。
-- [x] `package.json` に Inner Loop コマンド（`check:fast`, `test:fast`, `test:related`）が追加されていること。
+- [x] ルートの `scripts/` ディレクトリを完全撤廃し、Hooks (`hooks/qualityGateRunner.js` 等) および Skills (`skills/sync-api/scripts/` 等) へ構造的にリファクタリングしていること。
+- [x] CI ワークフロー (`.github/workflows/ci.yml`) において `submodules: recursive` が指定され、プラグインの `qualityGateRunner.js` を直接呼び出していること。
+- [x] `package.json` に Inner Loop コマンド（`check:fast`, `check:docs`, `test:fast`, `test:related`）が追加され、プラグインを直接指定していること。
 - [x] `AGENTS.md` がプラグインベースのガバナンス・合議制・物理フックに更新されていること。
 - [x] 設計決定記録 `docs/adr/0009-adopt-antigravity-review-loop-plugin.md` が作成・登録されていること。
 - [x] 本 Issue の 4 ドキュメントが完備されていること。

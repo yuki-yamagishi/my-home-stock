@@ -17,10 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run Secret Leak Scanner
-        run: node scripts/securityCheck.js
-      - name: Run Document Integrity Check
-        run: node scripts/docCheck.js
+      - name: Run MyHomeStock Quality Gate Guards
+        run: node .agents/plugins/myhomestock/hooks/qualityGateRunner.js
 
   backend:
     name: Backend Build & Tests (Spring Boot 4 / Java 21)

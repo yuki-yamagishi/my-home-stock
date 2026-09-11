@@ -28,7 +28,7 @@ description: >-
    ```bash
    npm run sync-api
    ```
-   - `scripts/syncApi.js` が実行され、`docs/openapi.json` を元に `openapi-typescript` が `frontend/src/api/schema.d.ts` を自動生成します。
+   - スキル付属スクリプト `scripts/sync.js` が実行され、`docs/openapi.json` を元に `openapi-typescript` が `frontend/src/api/schema.d.ts` を自動生成します。
 
 2. **フロントエンド型チェックの即時確認**:
    ```bash

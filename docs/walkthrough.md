@@ -15,15 +15,16 @@
     - 専用 Hook: `hooks/openapiSyncGuard.js`（OpenAPI スキーマと型同期の物理ガード）
     - 専用 Subagent: `agents/stock_domain_auditor.md`（4大ドメイン原則専門監査役）
     - 専用 Skills: `skills/sync-api/`, `skills/db-workflow/`（型同期・DB運用手順）
-- **不要なメタチェッカーの撤廃**:
-  - `scripts/checkers/agentSkillChecker.js` を削除し、Antigravity ネイティブローダーに委譲。
+- **ルート `scripts/` の完全撤廃と AGY プリミティブへの構造的リファクタリング**:
+  - `scripts/` ディレクトリ（8ファイル）を完全削除。
+  - 関心事をプラグインの Hooks（`qualityGateRunner.js`, `secretLeakGuard.js`, `pluginDeploymentGuard.js`, `docIntegrityGuard.js`, `openapiSyncGuard.js`）および Skills（`sync-api/scripts/sync.js`, `issue-workflow/scripts/switch.js`）へ再設計。
 - **ADR-0009 策定および AGENTS.md のスリム化**:
   - ドメイン制約の詳細をプラグイン `rules/` に移譲し、リポジトリ全体をクリーンに整理。
 
 ### 検証結果
-- `node scripts/securityCheck.js`: 100% PASS (0 secrets)
-- `node scripts/docCheck.js`: 100% PASS (PluginChecker, ADR, IssueDoc, OpenApiSync 全検証合格)
-- `npm run check`: 100% PASS (型検査, Vitest 7 tests, Vite PWA ビルド)
+- `npm run check:docs`: 100% PASS (Plugin Deployment, ADR, Issue 4-Doc, OpenAPI Sync)
+- `node .agents/plugins/myhomestock/hooks/qualityGateRunner.js`: 100% PASS (0 secrets, all guards passed)
+- `npm run check`: 100% PASS (QualityGateRunner, 型検査, Vitest 7 tests, Vite PWA ビルド)
 
 ### レビュー指摘事項と改善対応履歴
 - [docs/issues/ISSUE-006_migrate_to_antigravity_review_loop_plugin/walkthrough.md](./issues/ISSUE-006_migrate_to_antigravity_review_loop_plugin/walkthrough.md) を参照。

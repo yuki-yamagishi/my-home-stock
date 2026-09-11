@@ -35,18 +35,22 @@ AGY（Antigravity）公式仕様の **Composable Plugins Architecture** に準�
      - PR レビュー合議制において、MyHomeStock の 4 大ドメイン原則の遵守を批判的・客観的に専門監査する第三者サブエージェント。
    - **専用 Skills (`skills/sync-api/`, `skills/db-workflow/`)**:
      - OpenAPI 型自動同期手順および Docker PostgreSQL 16 運用 Runbook をオンデマンド提供。
-3. **メタチェッカーの刷新と Submodule 配備物理検証**:
-   - 過剰な文字列照合を行っていた旧 `scripts/checkers/agentSkillChecker.js` を削除し、保守負債を根絶。
-   - 代わりに、Submodule 未展開（空ディレクトリ）によるガバナンスバイパスリスクを物理遮断する軽量 `scripts/checkers/pluginChecker.js` を新設し、`docCheck.js` に統合。未初期化環境では `git submodule update --init --recursive` の実行を案内して即座にブロックする。
+3. **ルート `scripts/` の完全撤廃と AGY プリミティブ（Hooks / Skills）への構造的リファクタリング**:
+   - 旧来の「ルートの `scripts/` に雑多な検証・運用スクリプトを置く」慣習を完全根絶。
+   - スクリプトが担っていた関心事を AGY の公式プリミティブ（Rules, Skills, Hooks）に適合するよう構造からリファクタリング：
+     - **Hooks (`hooks/`)**: 静的検証・物理ガード・CI統合ランナー（`qualityGateRunner.js`, `secretLeakGuard.js`, `pluginDeploymentGuard.js`, `docIntegrityGuard.js`, `openapiSyncGuard.js`）へ集約。
+     - **Skills (`skills/*/scripts/`)**: 作業手順と付属自動化スクリプト（`sync-api/scripts/sync.js`, `issue-workflow/scripts/switch.js`）へ内包。
+   - これにより、プロジェクトルートの `scripts/` ディレクトリそのものを完全撤廃（0ファイル化）。CI や Git Hooks、`package.json` はプラグインの Hooks を直接利用する形に統一。
 
 ---
 
 ## 3. 結果・影響 (Consequences)
 
 ### プラスの影響 (Positive)
-- **AGY ベストプラクティスへの完全準拠**: 汎用ガバナンスとドメイン固有知識が疎結合に分離され、高い凝集度とポータビリティを実現。
-- **物理ガードと専門合議の極大化**: `openapi-sync-guard` による型乖離の物理遮断、および `stock_domain_auditor` によるドメイン整合性監査が機能し、精神論を完全排除。
-- **保守性と可観測性の向上**: ルートの `AGENTS.md` や `scripts/` がスリム化され、プロジェクト固有の関心事が `.agents/plugins/myhomestock/` に一元化された。
+- **AGY ベストプラクティスへの完全準拠**: プラグインが「Rules, Skills, Hooks, Agents」から成る完全自己完結したバンドル（Self-Contained Bundle）となり、ルートに露出していた実装負債が全廃。
+- **二重管理の根絶**: `hooks/` と `scripts/checkers/` で重複していた検証ロジックが 1 本化され、エージェント・CI・開発者で同一のガードを共有。
+- **物理ガードと専門合議の極大化**: `openapi-sync-guard` や `qualityGateRunner.js` による物理遮断、および `stock_domain_auditor` によるドメイン整合性監査が機能し、精神論を完全排除。
+- **リポジトリの極度なクリーン化**: プロジェクトルートに `scripts/` が存在せず、ソースコード・ドキュメント・プラグインのクリーンな 3 層構造を実現。
 
 ### トレードオフ・留意点 (Neutral / Negative)
 - 初回クローン時に `--recurse-submodules` または `git submodule update --init --recursive` の実行が必要。

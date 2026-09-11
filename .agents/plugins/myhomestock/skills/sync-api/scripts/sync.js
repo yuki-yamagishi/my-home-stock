@@ -1,5 +1,7 @@
 /**
  * Automated OpenAPI 3.0 to TypeScript Type Synchronization Script
+ * (.agents/plugins/myhomestock/skills/sync-api/scripts/sync.js)
+ * 
  * Fetches OpenAPI schema from live SpringDoc backend (or uses docs/openapi.json)
  * and generates type definitions for frontend using openapi-typescript.
  */
@@ -11,13 +13,13 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..');
+const rootDir = path.resolve(__dirname, '..', '..', '..', '..', '..');
 
 const OPENAPI_URL = 'http://localhost:8080/v3/api-docs';
 const LOCAL_SPEC_PATH = path.resolve(rootDir, 'docs', 'openapi.json');
 const OUTPUT_TYPES_PATH = path.resolve(rootDir, 'frontend', 'src', 'api', 'schema.d.ts');
 
-console.log('🔄 Running OpenAPI 3.0 Schema & TypeScript Type Sync...');
+console.log('🔄 Running OpenAPI 3.0 Schema & TypeScript Type Sync (Skill: sync-api)...');
 
 async function syncApi() {
   let specPath = LOCAL_SPEC_PATH;
@@ -49,7 +51,6 @@ async function syncApi() {
       stdio: 'inherit',
     });
 
-    // Append convenience re-exports if needed
     let content = fs.readFileSync(OUTPUT_TYPES_PATH, 'utf-8');
     if (!content.includes('export type StockItem =')) {
       content += `
@@ -60,9 +61,9 @@ export type HealthResponse = components['schemas']['HealthResponseDto'];
       fs.writeFileSync(OUTPUT_TYPES_PATH, content, 'utf-8');
     }
 
-    console.log(`✅ OpenAPI TypeScript types successfully updated at: frontend/src/api/schema.d.ts\n`);
+    console.log(`\n✅ OpenAPI Type Sync SUCCESS: Types regenerated at ${path.relative(rootDir, OUTPUT_TYPES_PATH)}\n`);
   } catch (err) {
-    console.error(`❌ Failed to run openapi-typescript:`, err);
+    console.error(`❌ Error generating types with openapi-typescript:`, err);
     process.exit(1);
   }
 }

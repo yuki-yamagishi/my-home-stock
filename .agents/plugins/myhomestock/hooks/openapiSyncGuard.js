@@ -1,15 +1,62 @@
 /**
  * OpenAPI Sync Guard Hook (.agents/plugins/myhomestock/hooks/openapiSyncGuard.js)
  * 
- * Enforces OpenAPI Schema and TypeScript type synchronicity before git commit or gh pr create:
- * 1. Checks if docs/openapi.json and frontend/src/api/schema.d.ts exist.
- * 2. Checks if schema.d.ts contains required core schemas.
- * 3. Blocks commit/PR creation if schemas are out of sync or missing, providing clear remediation.
+ * Enforces OpenAPI Schema and TypeScript type synchronicity:
+ * 1. Used as a PreToolUse Lifecycle Hook before git commit / gh pr create
+ * 2. Used as a verification function (checkOpenApiSync) during CI / quality gate runs
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+/**
+ * Pure verification logic: checks docs/openapi.json and frontend/src/api/schema.d.ts
+ * Uses console.error / stderr for logging so stdout remains clean for AGY hook JSON.
+ */
+export function checkOpenApiSync(projectRoot, options = {}) {
+  const silent = Boolean(options.silent);
+  if (!silent) {
+    console.error('  📡 [OpenAPI Sync Guard] OpenAPI 仕様書および TypeScript 型定義の同期検証...');
+  }
+  let hasError = false;
+
+  const specPath = path.resolve(projectRoot, 'docs', 'openapi.json');
+  const typePath = path.resolve(projectRoot, 'frontend', 'src', 'api', 'schema.d.ts');
+
+  if (!fs.existsSync(specPath)) {
+    if (!silent) console.error('\n❌ [OpenAPI 仕様書欠落] docs/openapi.json が存在しません。');
+    return false;
+  }
+
+  if (!fs.existsSync(typePath)) {
+    if (!silent) {
+      console.error('\n❌ [TypeScript 型定義欠落] frontend/src/api/schema.d.ts が存在しません。');
+      console.error('   👉 対処法: npm run sync-api を実行して型定義を生成してください。');
+    }
+    return false;
+  }
+
+  const typeContent = fs.readFileSync(typePath, 'utf-8');
+  if (typeContent.length < 50) {
+    if (!silent) console.error('\n❌ [TypeScript 型定義内容不足] schema.d.ts の内容が極めて短小です。');
+    hasError = true;
+  }
+
+  const REQUIRED_SCHEMAS = ['StockItemResponseDto', 'StockItemRequestDto'];
+  for (const schemaName of REQUIRED_SCHEMAS) {
+    if (!typeContent.includes(schemaName)) {
+      if (!silent) console.error(`\n❌ [スキーマ未定義] frontend/src/api/schema.d.ts に ${schemaName} が見つかりません。`);
+      hasError = true;
+    }
+  }
+
+  if (!hasError && !silent) {
+    console.error('    ✓ docs/openapi.json & frontend/src/api/schema.d.ts: 型同期整合性を確認済');
+  }
+
+  return !hasError;
+}
 
 function readStdinJson(timeoutMs = 2000) {
   return new Promise((resolve) => {
@@ -63,6 +110,9 @@ function findProjectRoot(startDir) {
   return path.resolve(startDir, '../../../..');
 }
 
+/**
+ * Lifecycle Hook handler (PreToolUse)
+ */
 export function handleOpenApiSyncGuard(payload = {}, options = {}) {
   const toolCall = payload.toolCall || {};
   const toolName = toolCall.name || '';
@@ -80,32 +130,13 @@ export function handleOpenApiSyncGuard(payload = {}, options = {}) {
   }
 
   const projectRoot = options.projectRoot || findProjectRoot(path.dirname(fileURLToPath(import.meta.url)));
-  const specPath = path.resolve(projectRoot, 'docs/openapi.json');
-  const typePath = path.resolve(projectRoot, 'frontend/src/api/schema.d.ts');
+  const ok = checkOpenApiSync(projectRoot, { silent: true });
 
-  if (!fs.existsSync(specPath)) {
+  if (!ok) {
     return {
       decision: 'deny',
-      reason: "[OpenApiSyncGuard Denied] docs/openapi.json does not exist. Ensure OpenAPI spec is present before committing.",
+      reason: "[OpenApiSyncGuard Denied] OpenAPI schema or frontend types are missing/out-of-sync. (Remediation Guidance: Run 'npm run sync-api' to re-synchronize types.)",
     };
-  }
-
-  if (!fs.existsSync(typePath)) {
-    return {
-      decision: 'deny',
-      reason: "[OpenApiSyncGuard Denied] frontend/src/api/schema.d.ts does not exist. (Remediation Guidance: Run 'npm run sync-api' to generate TypeScript types.)",
-    };
-  }
-
-  const typeContent = fs.readFileSync(typePath, 'utf8');
-  const REQUIRED_SCHEMAS = ['StockItemResponseDto', 'StockItemRequestDto'];
-  for (const schemaName of REQUIRED_SCHEMAS) {
-    if (!typeContent.includes(schemaName)) {
-      return {
-        decision: 'deny',
-        reason: `[OpenApiSyncGuard Denied] Required schema '${schemaName}' is missing in frontend/src/api/schema.d.ts. (Remediation Guidance: Run 'npm run sync-api' to re-synchronize types with OpenAPI spec.)`,
-      };
-    }
   }
 
   return { decision: 'allow' };
@@ -115,9 +146,17 @@ const isDirectExecution = process.argv[1] &&
   (fileURLToPath(import.meta.url).toLowerCase() === path.resolve(process.argv[1]).toLowerCase());
 
 if (isDirectExecution) {
-  readStdinJson().then((payload) => {
-    const result = handleOpenApiSyncGuard(payload);
-    writeStdoutJson(result);
-    process.exit(0);
-  });
+  // Check if explicitly called via CLI flag
+  if (process.argv.includes('--cli') || process.argv.includes('--check')) {
+    const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+    const ok = checkOpenApiSync(rootDir);
+    process.exit(ok ? 0 : 1);
+  } else {
+    // AGY Lifecycle Hook execution (default for direct execution)
+    readStdinJson().then((payload) => {
+      const result = handleOpenApiSyncGuard(payload);
+      writeStdoutJson(result);
+      process.exit(0);
+    });
+  }
 }
