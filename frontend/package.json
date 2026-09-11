@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "sync-api": "node ../scripts/syncApi.js"
+    "sync-api": "node ../.agents/plugins/myhomestock/skills/sync-api/scripts/sync.js"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.2",
