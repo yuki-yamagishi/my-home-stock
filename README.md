@@ -19,8 +19,7 @@ AI コーディングエージェント（Antigravity, Cursor, Claude, Copilot �
 - 🔄 **OpenAPI 3.0 & TypeScript 型同期**:
   - SpringDoc が出力する REST API 仕様から、`openapi-typescript` によりフロントエンドの型定義（`schema.d.ts`）を自動生成。型の手動二重管理を根絶。
 - 🚀 **ワンショット総合品質ゲート (`npm run check`)**:
-  - シークレットスキャン (`scripts/securityCheck.js`)
-  - ドキュメント & ADR 整合性検査 (`scripts/docCheck.js`)
+  - プラグイン統合品質ガード (`qualityGateRunner.js`: シークレット・Submodule配備・ADR/Issueドキュメント・OpenAPI型同期)
   - TypeScript Strict 型検査 (`npm --prefix frontend run type-check`)
   - 純粋ドメインロジック単体テスト (`npm --prefix frontend run test:run`)
   - プロダクションバンドルビルド (`npm --prefix frontend run build`)
@@ -108,23 +107,19 @@ npm run check
 
 ```
 MyHomeStock/
-├── .agents/skills/dev-harness/   # AIエージェント向け開発ハーネススキル
+├── .agents/plugins/              # Antigravity プラグイン群 (汎用ガバナンス + MyHomeStock専用)
 ├── .github/
 │   ├── ISSUE_TEMPLATE/           # Feature / Bug / Refactor / Harness / Docs Issue テンプレート
 │   ├── PULL_REQUEST_TEMPLATE.md  # PR テンプレート
 │   └── workflows/ci.yml          # GitHub Actions CI (自動品質検査)
 ├── docs/                         # 設計・事前検証・成果レポート (完全日本語)
-│   ├── adr/                      # Architecture Decision Records (ADR-0001〜0007)
+│   ├── adr/                      # Architecture Decision Records (ADR-0001〜0009)
 │   ├── issues/                   # Issue / タスク一覧 (Git-Tracked、オフライン対応、0000-template.md)
 │   ├── pre_phase_verification.md # 4軸事前検証ログ
 │   ├── implementation_plan.md    # 実装計画書
 │   ├── walkthrough.md            # 成果レポート
 │   ├── architecture.md           # アーキテクチャ設計書
 │   └── openapi.json              # OpenAPI 3.0 仕様書ベースライン
-├── scripts/
-│   ├── securityCheck.js          # シークレットスキャナー
-│   ├── docCheck.js               # ドキュメント整合性検査
-│   └── syncApi.js                # SpringDoc OpenAPI -> TypeScript型自動同期
 ├── src/main/java/com/myhomestock/ # Spring Boot 4 (Java 21) REST API & SPA 配信
 │   ├── config/                   # OpenAPI, Security, SpaWebMvcConfig
 │   ├── controller/               # REST コントローラー & GlobalExceptionHandler

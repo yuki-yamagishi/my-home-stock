@@ -13,7 +13,19 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..', '..', '..', '..', '..');
+
+function findProjectRoot(startDir) {
+  let cur = path.resolve(startDir);
+  while (cur && path.dirname(cur) !== cur) {
+    if (fs.existsSync(path.join(cur, 'package.json')) && fs.existsSync(path.join(cur, '.git'))) {
+      return cur;
+    }
+    cur = path.dirname(cur);
+  }
+  return path.resolve(startDir, '../../../../../..');
+}
+
+const rootDir = findProjectRoot(__dirname);
 
 const OPENAPI_URL = 'http://localhost:8080/v3/api-docs';
 const LOCAL_SPEC_PATH = path.resolve(rootDir, 'docs', 'openapi.json');

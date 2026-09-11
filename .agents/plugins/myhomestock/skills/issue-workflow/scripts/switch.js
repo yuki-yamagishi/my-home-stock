@@ -14,7 +14,19 @@ import { checkDocIntegrity } from '../../../hooks/docIntegrityGuard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
+
+function findProjectRoot(startDir) {
+  let cur = path.resolve(startDir);
+  while (cur && path.dirname(cur) !== cur) {
+    if (fs.existsSync(path.join(cur, 'package.json')) && fs.existsSync(path.join(cur, '.git'))) {
+      return cur;
+    }
+    cur = path.dirname(cur);
+  }
+  return path.resolve(startDir, '../../../../../..');
+}
+
+const PROJECT_ROOT = findProjectRoot(__dirname);
 const DOCS_DIR = path.resolve(PROJECT_ROOT, 'docs');
 const ISSUES_DIR = path.resolve(DOCS_DIR, 'issues');
 

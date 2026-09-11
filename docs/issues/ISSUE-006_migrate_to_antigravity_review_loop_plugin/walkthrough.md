@@ -60,6 +60,9 @@
 | `[must]` | ルート scripts/ の完全撤廃と構造的リファクタリング (ユーザー指摘) | `scripts/` をプラグインへ無理やり移設するのではなく、AGY の公式プリミティブ（Hooks/Skills）へと構造から再設計。`scripts/` を完全撤廃し、Hooks (`hooks/`) と Skills (`skills/*/scripts/`) に昇華させた | `hooks/`, `skills/`, ルート `scripts/` (削除) |
 | `[should]` | GitHub Actions CI における Submodule チェックアウト漏れ (Fleet監査指摘) | CI 環境で Submodule が空となり検査落ちするリスクを防ぐため、`.github/workflows/ci.yml` の各ジョブに `submodules: recursive` を追加 | `.github/workflows/ci.yml` |
 | `[should]` | ルールとスキルの責務分離 (Rules vs Skills) | 常時制約（JPA楽観排他、世帯分離等）を `rules/` に、オンデマンド手順（型同期等）を `skills/` に厳格に分離した | `.agents/plugins/myhomestock/rules/`, `skills/` |
-| `[nits]` | Inner Loop コマンドの互換性向上 | プラグインの `dev-lifecycle` で推奨される `check:fast`, `check:docs`, `test:fast`, `test:related` を `package.json` に追加 | `package.json` |
+| `[must]` | スクリプト内相対パス解決の脆弱性 (Fleetレビュー指摘) | `sync.js` と `switch.js` で親ディレクトリを走査して `package.json` と `.git` を特定する動的探索関数 `findProjectRoot()` を導入し、実行ディレクトリや階層移動に頑健な構造へ改善 | `sync.js`, `switch.js` |
+| `[must]` | frontend/package.json の旧スクリプト参照残骸 (Fleetレビュー指摘) | `scripts/generate-api-client.js` を参照していた `sync-api` スクリプトを `../.agents/plugins/myhomestock/skills/sync-api/scripts/sync.js` へ更新し、Root / Frontend 双方での単体実行を検証 | `frontend/package.json` |
+| `[nits]` | ドキュメント内の旧スクリプト参照残骸 (Fleetレビュー指摘) | `README.md` および `docs/adr/README.md` 内の旧 `scripts/` 記述をプラグイン配下の新パスへ統一 | `README.md`, `docs/adr/README.md` |
+
 
 
