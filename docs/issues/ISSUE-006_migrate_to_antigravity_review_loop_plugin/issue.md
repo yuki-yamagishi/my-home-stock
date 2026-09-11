@@ -70,5 +70,6 @@
 - [x] `npm.cmd run check` が 100% PASS すること。
 
 ### 5.2. マージ前プロセス完了基準 (Pre-Merge DoD)
-- [ ] 2者 Fleet レビュー（`fleet_reviewer` + `fleet_completion_auditor`）の合議受領。
+- [x] 3者 Fleet レビュー（`fleet_reviewer` + `fleet_completion_auditor` + `stock_domain_auditor`）の合議受領（全者 LGTM 達成）。
 - [ ] 人間開発者（ユーザー）による最終確認とマージ実行。
+
