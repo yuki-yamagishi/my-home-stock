@@ -50,6 +50,7 @@ MyHomeStock/
 │
 ├── scripts/                            # 自動検査・型同期スクリプト
 │   ├── checkers/                       # モジュール化された整合性チェッカー群
+│   │   ├── pluginChecker.js            # Submodule 配備 & プラグイン整合性物理検証
 │   │   ├── issueDocChecker.js          # docs/issues/ 4ドキュメントおよびルートポインタ整合性検証
 │   │   ├── adrChecker.js               # docs/adr/ 採番および目次同期検証
 │   │   └── openapiSyncChecker.js       # docs/openapi.json と TypeScript 型定義の同期検証
