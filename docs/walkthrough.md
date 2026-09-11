@@ -22,7 +22,7 @@
 
 ### 検証結果
 - `node scripts/securityCheck.js`: 100% PASS (0 secrets)
-- `node scripts/docCheck.js`: 100% PASS (ADR, IssueDoc, OpenApiSync 全検証合格)
+- `node scripts/docCheck.js`: 100% PASS (PluginChecker, ADR, IssueDoc, OpenApiSync 全検証合格)
 - `npm run check`: 100% PASS (型検査, Vitest 7 tests, Vite PWA ビルド)
 
 ### レビュー指摘事項と改善対応履歴

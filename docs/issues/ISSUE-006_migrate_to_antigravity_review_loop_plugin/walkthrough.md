@@ -32,9 +32,11 @@
 - [x] Git Submodule 正常登録 (`git submodule status`)
 - [x] プラグイン無修正確認 (`git -C .agents/plugins/antigravity-review-loop status` が clean)
 - [x] 専用プラグイン正常配置 (`.agents/plugins/myhomestock/` の plugin.json, rules, hooks, skills, agents)
+- [x] Submodule 未展開リスクの物理封じ込め (`scripts/checkers/pluginChecker.js` を `docCheck.js` に統合)
+- [x] GitHub Actions CI (`.github/workflows/ci.yml`) における `submodules: recursive` 設定
 - [x] `npm.cmd run check` 全件 PASS:
   - シークレットスキャン (PASS)
-  - ドキュメント整合性検証 (PASS: ADR, IssueDoc, OpenApiSync)
+  - プラグイン & ドキュメント整合性検証 (PASS: Plugin, ADR, IssueDoc, OpenApiSync)
   - TypeScript 型検査 (PASS)
   - Vitest 単体テスト (PASS)
   - Vite + PWA プロダクションビルド (PASS)
@@ -49,6 +51,10 @@
 | `[must]` | 重複機能の完全削除 | 旧 `dev-harness` スキルおよび旧 `fleet-reviewer` サブエージェントを `git rm` で削除し、プラグイン公式機能に一本化した | `.agents/` |
 | `[must]` | ハーネス整合性チェックの必要性再考と撤廃 | 文字列一致のメタ検査（`agentSkillChecker.js`）は保守負債となるため完全削除し、Antigravity ネイティブ機構に委譲した | `scripts/checkers/agentSkillChecker.js`, `scripts/docCheck.js` |
 | `[must]` | AGY ベストプラクティスに基づく専用プラグイン化 | `.agents/plugins/myhomestock/` を新設し、専用 Hook（`openapi-sync-guard`）、専用 Subagent（`stock_domain_auditor`）、専用 Rules（`domain-constraints.md`）、専用 Skills（`sync-api`, `db-workflow`）を体系的に配備した | `.agents/plugins/myhomestock/` |
+| `[must]` | Submodule 未展開リスクの物理封じ込め (Fleet監査指摘) | 空ディレクトリによるサイレントバイパスを防ぐため、`scripts/checkers/pluginChecker.js` を新設して `docCheck.js` に統合。未初期化時はエラー案内とともに即時ブロック | `scripts/checkers/pluginChecker.js`, `scripts/docCheck.js` |
+| `[should]` | GitHub Actions CI における Submodule チェックアウト漏れ (Fleet監査指摘) | CI 環境で Submodule が空となり検査落ちするリスクを防ぐため、`.github/workflows/ci.yml` の各ジョブに `submodules: recursive` を追加 | `.github/workflows/ci.yml` |
 | `[should]` | ルールとスキルの責務分離 (Rules vs Skills) | 常時制約（JPA楽観排他、世帯分離等）を `rules/` に、オンデマンド手順（型同期等）を `skills/` に厳格に分離した | `.agents/plugins/myhomestock/rules/`, `skills/` |
 | `[nits]` | Inner Loop コマンドの互換性向上 | プラグインの `dev-lifecycle` で推奨される `check:fast`, `test:fast`, `test:related` を `package.json` に追加 | `package.json` |
+| `[nits]` | Issue 4 ドキュメント間の文言整合 (Fleet監査指摘) | `issue.md`, `pre_verification.md`, `plan.md` における旧チェッカー記述を、実態である `pluginChecker.js` に整合化 | `docs/issues/ISSUE-006_.../` |
+
 

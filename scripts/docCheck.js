@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { checkAdrIntegrity } from './checkers/adrChecker.js';
 import { checkIssueDocIntegrity } from './checkers/issueDocChecker.js';
 import { checkOpenApiSyncIntegrity } from './checkers/openapiSyncChecker.js';
+import { checkPluginIntegrity } from './checkers/pluginChecker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,11 +19,15 @@ console.log('📝 Running Automated Document & Architecture Integrity Check...\n
 
 let allPassed = true;
 
-// 1. Check ADRs
+// 1. Check Antigravity Plugins & Submodule
+const pluginOk = checkPluginIntegrity(PROJECT_ROOT);
+if (!pluginOk) allPassed = false;
+
+// 2. Check ADRs
 const adrOk = checkAdrIntegrity(DOCS_DIR);
 if (!adrOk) allPassed = false;
 
-// 2. Check Issue Docs & Root Docs
+// 3. Check Issue Docs & Root Docs
 const issueDocOk = checkIssueDocIntegrity(DOCS_DIR);
 if (!issueDocOk) allPassed = false;
 

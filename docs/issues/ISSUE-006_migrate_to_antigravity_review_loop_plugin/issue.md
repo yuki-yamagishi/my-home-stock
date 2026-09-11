@@ -31,7 +31,7 @@
 2. **プラグイン修正によるアップストリーム破壊リスクの完全排除**:
    - プラグイン側のコードには一切手を加えず、Git Submodule として純粋にマウントする。
 3. **Submodule 未展開・不整合リスクの排除**:
-   - `scripts/checkers/agentSkillChecker.js` を改修し、Submodule の存在と初期化状態（`plugin.json`, `hooks.json`, `skills/`, `agents/`）を `npm run check` で物理的に検証・ブロックする。
+   - 過剰な文字列照合（保守負債）を撤廃し、Submodule の未展開リスクを物理的に検証・ブロックする軽量チェッカー `scripts/checkers/pluginChecker.js` を新設して `scripts/docCheck.js` に統合する。
 
 ---
 
@@ -50,7 +50,7 @@
 ### シナリオ 3: ハーネス整合性チェッカーおよび品質ゲートの全件合格
 - **Given**: プラグイン導入および重複削除後のコードベースにおいて
 - **When**: `npm.cmd run check` を実行したとき
-- **Then**: `securityCheck.js`, `agentSkillChecker.js`（プラグイン整合性検証）, `docCheck.js`, フロントエンド型検査, 単体テスト, プロダクションビルドの全検査が 100% PASS すること。
+- **Then**: `securityCheck.js`, `pluginChecker.js`（Submodule配備・プラグイン整合性検証）, `docCheck.js`, フロントエンド型検査, 単体テスト, プロダクションビルドの全検査が 100% PASS すること。
 
 ---
 
@@ -61,7 +61,8 @@
 - [x] プラグイン内部のコード・ファイルが一切修正されていないこと（無修正の厳守）。
 - [x] `.agents/skills/dev-harness/` が削除されていること。
 - [x] `.agents/subagents/fleet-reviewer/` が削除されていること。
-- [x] `scripts/checkers/agentSkillChecker.js` がプラグイン整合性検証に改修されていること。
+- [x] 旧重厚チェッカー `scripts/checkers/agentSkillChecker.js` を撤廃し、Submodule 未展開リスクを物理排除する軽量 `pluginChecker.js` を新設・配備していること。
+- [x] CI ワークフロー (`.github/workflows/ci.yml`) において `submodules: recursive` が指定されていること。
 - [x] `package.json` に Inner Loop コマンド（`check:fast`, `test:fast`, `test:related`）が追加されていること。
 - [x] `AGENTS.md` がプラグインベースのガバナンス・合議制・物理フックに更新されていること。
 - [x] 設計決定記録 `docs/adr/0009-adopt-antigravity-review-loop-plugin.md` が作成・登録されていること。

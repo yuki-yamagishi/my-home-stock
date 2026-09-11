@@ -35,8 +35,9 @@ AGY（Antigravity）公式仕様の **Composable Plugins Architecture** に準�
      - PR レビュー合議制において、MyHomeStock の 4 大ドメイン原則の遵守を批判的・客観的に専門監査する第三者サブエージェント。
    - **専用 Skills (`skills/sync-api/`, `skills/db-workflow/`)**:
      - OpenAPI 型自動同期手順および Docker PostgreSQL 16 運用 Runbook をオンデマンド提供。
-3. **不要なメタチェッカーの撤廃**:
-   - `scripts/checkers/agentSkillChecker.js` を削除し、Antigravity ネイティブのプラグインローダーに委譲。「テストのためのテスト」という保守負債を完全根絶。
+3. **メタチェッカーの刷新と Submodule 配備物理検証**:
+   - 過剰な文字列照合を行っていた旧 `scripts/checkers/agentSkillChecker.js` を削除し、保守負債を根絶。
+   - 代わりに、Submodule 未展開（空ディレクトリ）によるガバナンスバイパスリスクを物理遮断する軽量 `scripts/checkers/pluginChecker.js` を新設し、`docCheck.js` に統合。未初期化環境では `git submodule update --init --recursive` の実行を案内して即座にブロックする。
 
 ---
 
