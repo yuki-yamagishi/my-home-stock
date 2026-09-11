@@ -6,7 +6,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { checkAdrIntegrity } from './checkers/adrChecker.js';
-import { checkAgentSkillIntegrity } from './checkers/agentSkillChecker.js';
 import { checkIssueDocIntegrity } from './checkers/issueDocChecker.js';
 import { checkOpenApiSyncIntegrity } from './checkers/openapiSyncChecker.js';
 
@@ -15,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const DOCS_DIR = path.resolve(PROJECT_ROOT, 'docs');
 
-console.log('📝 Running Automated Document & Harness Integrity Check...\n');
+console.log('📝 Running Automated Document & Architecture Integrity Check...\n');
 
 let allPassed = true;
 
@@ -23,11 +22,7 @@ let allPassed = true;
 const adrOk = checkAdrIntegrity(DOCS_DIR);
 if (!adrOk) allPassed = false;
 
-// 2. Check Agent & Skill Synchronicity
-const agentSkillOk = checkAgentSkillIntegrity(PROJECT_ROOT);
-if (!agentSkillOk) allPassed = false;
-
-// 3. Check Issue Docs & Root Docs
+// 2. Check Issue Docs & Root Docs
 const issueDocOk = checkIssueDocIntegrity(DOCS_DIR);
 if (!issueDocOk) allPassed = false;
 

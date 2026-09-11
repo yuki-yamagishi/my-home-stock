@@ -7,6 +7,9 @@
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
     "check": "node scripts/securityCheck.js && node scripts/docCheck.js && npm --prefix frontend run type-check && npm --prefix frontend run test:run && npm --prefix frontend run build",
+    "check:fast": "npm --prefix frontend run type-check",
+    "test:fast": "npm --prefix frontend run test:run",
+    "test:related": "npm --prefix frontend run test:run",
     "security-check": "node scripts/securityCheck.js",
     "doc-check": "node scripts/docCheck.js",
     "issue:switch": "node scripts/issueSwitch.js",

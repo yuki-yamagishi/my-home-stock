@@ -1,6 +1,6 @@
 # ISSUE-001: 開発ハーネスおよびCI/CD・品質ガバナンス・独立レビュー機構のセットアップ
 
-- **ステータス**: 🟡 進行中 (`status: in_progress`)
+- **ステータス**: ✅ 完了 (`status: closed`)
 - **優先度**: 最高 (Critical / Foundation)
 - **カテゴリ**: `type: harness`, 開発基盤, ガバナンス, CI/CD, 自動化
 - **対象プラットフォーム**: Spring Boot 4 (Java 21) / React 18 (Vite, Tailwind CSS, TanStack Query) / Antigravity Agent / Git

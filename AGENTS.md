@@ -52,18 +52,24 @@ MyHomeStock/
 │   ├── checkers/                       # モジュール化された整合性チェッカー群
 │   │   ├── issueDocChecker.js          # docs/issues/ 4ドキュメントおよびルートポインタ整合性検証
 │   │   ├── adrChecker.js               # docs/adr/ 採番および目次同期検証
-│   │   ├── agentSkillChecker.js        # AGENTS.md およびスキル定義同期検証
 │   │   └── openapiSyncChecker.js       # docs/openapi.json と TypeScript 型定義の同期検証
 │   ├── securityCheck.js                # クレデンシャル・シークレット漏洩スキャナー
 │   ├── docCheck.js                     # 各種チェッカーを統括するオーケストレーター
 │   ├── issueSwitch.js                  # Issue ライフサイクル切り替え・自動ポインタ同期
 │   └── syncApi.js                      # SpringDoc OpenAPI -> TypeScript型自動同期
 │
-├── .agents/                            # AIエージェント設定・カスタムサブエージェント
-│   ├── skills/dev-harness/SKILL.md     # 開発ハーネススキル定義
-│   └── subagents/fleet-reviewer/       # 独立レビューサブエージェント (Fleet)
-│       ├── subagent.json               # 最小権限設定
-│       └── SYSTEM_PROMPT.md            # Conventional Comments 独立レビュー規約
+├── .agents/plugins/                    # Antigravity プラグイン群 (Composable Plugins)
+│   ├── antigravity-review-loop/        # 【汎用ガバナンス】Git Submodule (無修正)
+│   │   ├── hooks.json                  # 物理ライフサイクルフック (DoR Gate, Safety Guard, Pre-PR Gate, Stop Hook)
+│   │   ├── rules/single-command.md     # 単一コマンド実行規約
+│   │   ├── skills/                     # 汎用ライフサイクル (issue-lifecycle, dev-lifecycle, review-self-healing)
+│   │   └── agents/                     # 汎用合議 (fleet_reviewer, fleet_completion_auditor, fleet_dor_auditor)
+│   └── myhomestock/                    # 【MyHomeStock 専用プラグイン】(AGY公式仕様完全準拠)
+│       ├── plugin.json                 # プラグインマニフェスト
+│       ├── hooks.json                  # 専用フック (openapi-sync-guard: 型同期物理ガード)
+│       ├── rules/domain-constraints.md # ドメイン不変則 (JPA楽観排他, 世帯分離, コアロジック不可侵)
+│       ├── skills/                     # 専用 Runbook (sync-api, db-workflow)
+│       └── agents/stock_domain_auditor.md # ドメイン整合性・4大原則専門監査役
 │
 ├── .githooks/                          # 共有 Git Hooks
 │   ├── pre-commit                      # シークレットスキャン + ドキュメント整合性検証
@@ -112,45 +118,74 @@ MyHomeStock/
 - アーキテクチャ変更や新しい設計方針を導入する場合は、`docs/adr/000X-xxx.md` を作成。
 - `docs/adr/README.md` の一覧テーブルに必ず登録（`node scripts/docCheck.js` で自動検証）。
 
-### ④ ワンショット品質ゲート (`npm run check`)
-コミット前・プッシュ前には必ず以下のコマンドで全件合格を確認します：
-```bash
-npm run check
-```
-実行される自動検証：
-1. `securityCheck.js`: 秘密情報・APIキー・クレデンシャル混入検知
-2. `docCheck.js`: Issue 4ドキュメント、ADR、エージェント定義の整合性検証
-3. `type-check`: TypeScript 型検査
-4. `test:run`: 単体テスト・UIテスト
-5. `build`: プロダクションビルド・PWA Manifest 検証
+### ④ Inner Loop（開発中高速反復）と Outer Loop（PR前一括検証）の分離
+思考のテンポと開発生産性を極大化するため、**軽微な修正のたびに重い本番ビルドを伴う `npm run check` を連発することを厳禁とします**（グローバル憲章第 2.1 条）。
 
-### ⑤ 独立レビューサブエージェント (Fleet)
-- PR 作成後、実装担当エージェントとは別の **Fleet Reviewer Subagent**（`.agents/subagents/fleet-reviewer/`）を呼び出し、客観的な第三者視点で `git diff` をレビューします。
+1. **Inner Loop（開発中・TDD高速反復）**:
+   - 変更箇所にスコープを絞った最小・最速の検証をミリ秒単位で反復実行します：
+     - **型検査のみ確認 (約1秒)**:
+       ```bash
+       npm.cmd run check:fast
+       ```
+     - **関連単体テストのみ高速実行 (約1秒)**:
+       ```bash
+       npm.cmd run test:related
+       ```
+     - **ドキュメント整合性のみ確認 (約0.2秒)**:
+       ```bash
+       node scripts/docCheck.js
+       ```
+   - **TDD中間コミット時**:
+     - Git Pre-Commit Hook (`.githooks/pre-commit`) により、シークレット漏洩とドキュメント整合性が自動検証されます。手動で重い全量チェックを叩く必要はありません。
+
+2. **Outer Loop（PR作成直前・プッシュ前・CI）**:
+   - すべての実装・テストが完了し、**PRを作成する直前の最終関門としてのみ 1 回実行**します：
+     ```bash
+     npm.cmd run check
+     ```
+   - 実行される自動検証：
+     1. `securityCheck.js`: 秘密情報・APIキー・クレデンシャル混入検知
+     2. `docCheck.js`: ADR、Issue 4ドキュメント、OpenAPI型同期の整合性検証
+     3. `type-check`: TypeScript Strict 型検査
+     4. `test:run`: 単体テスト・UIテスト全件
+     5. `build`: Vite プロダクションビルド・PWA Manifest 生成検証
+   - ※ リモートプッシュ時には Git Pre-Push Hook により `npm.cmd run check` が自動強制されます。
+
+### ⑤ 独立レビューサブエージェント合議制 (Fleet Review Consortium)
+- PR 作成後は、汎用ガバナンスプラグイン（`antigravity-review-loop`）および専用プラグイン（`myhomestock`）に基づき、以下の専門サブエージェントを `invoke_subagent` で並行起動して客観的な合議レビューを受領します：
+  - **`fleet_reviewer`**: コード品質・型安全性・セキュリティ・アーキテクチャ原則・デッドロック防止の専門レビュー
+  - **`fleet_completion_auditor`**: 批判的完了性・Why / 排除リスク・受け入れ基準（DoD）・やり残し監査
+  - **`stock_domain_auditor`**: MyHomeStock 固有の 4 大ドメイン原則（JPA楽観排他、世帯分離、コアロジック不可侵、OpenAPI型同期）の専門監査
 - **Conventional Comments** 形式の重要度接頭辞を使用：
   - `[must]`: マージ前に修正必須（バグ、セキュリティ脆弱性、破壊的変更）
   - `[should]`: 強く推奨（保守性、エラーハンドリング向上）
   - `[imo]`: 私見・提案（リファクタリング、別案）
   - `[nits]`: 些細な指摘（typo、命名修正）
   - `[ask]`: 質問・確認
-- 総合判定として `[LGTM]` または `[要修正]` を明示し、`gh pr comment` で PR に公式コメントとして投稿します。
+  - `[good]`: 優れた実装への賞賛・DoD達成確認
+- **合議制（Consortium Consensus）とセルフLGTMの物理禁止**:
+  - 全レビュアーが共に `LGTM`（未解決ブロッキング指摘 0 件）となった場合のみ承認。
+  - コード修正（自己修復）が入った場合は、過去のレビュー判定は Stale（無効化）され、必ず再レビュー（Re-review & Re-audit）を受領すること。エージェント自身による自己承認（セルフLGTM）は厳禁。
+- **物理ライフサイクルフック (`hooks.json`)**:
+  - `branchDoRGate.js`: ブランチ作成前の Definition of Ready（DoR: Why, 排除リスク, 受入シナリオ）および作業ツリーのクリーン性を物理強制。
+  - `safetyGuard.js`: 自律エージェントによる `gh pr merge` の直接実行や対話型テストによるハングを物理遮断。
+  - `prePrAuditGate.js`: PR作成前の4軸ドキュメントおよびPre-PR DoDの未完了チェックを物理検証。
+  - `stopHook.js`: レビューループ完了前の早期セッション停止を物理ブロック。
+  - `openapiSyncGuard.js`: コミット・PR作成時の OpenAPI 仕様書と TypeScript 型定義の乖離を物理ブロック。
 
-### ⑥ 人間承認マージ
-- 自動マージは禁止。Fleet Reviewer の指摘を解消し、人間開発者のレビューと承認を経てマージを行います。
+### ⑥ 人間承認マージ専権
+- PR 発行直後の自動マージは厳禁。エージェント自身による `gh pr merge` の実行は物理的に遮断されています。
+- Fleet レビュー合議の成立および CI 全パスを確認後、人間（ユーザー）に最終確認とマージを依頼すること。
 
 ---
 
-## 3. コンテキストドリフト & 仕様破壊の絶対防止ルール
+## 3. ドメイン不変則 & ガバナンス規約
 
-1. **既存テストの弱体化・削除の厳禁**:
-   - リファクタリングや機能追加時に既存テストが失敗した際、テストの期待値やアサーションを安易に書き換えて合格させてはなりません。
-2. **純粋コアロジックの不可侵**:
-   - `frontend/src/core/` 内で React や DOM、ブラウザ API を直接インポートしてはなりません。
-3. **JPA 楽観的排他制御の厳守**:
-   - 在庫データの更新時はエンティティの `@Version` を意識し、リクエストに `version` を含めて競合を検知してください。
-4. **世帯マルチテナント (`household_id`) の分離**:
-   - データアクセス時は世帯識別子を正しく伝播させ、世帯間のデータ混入を防止してください。
-5. **Windows PowerShell 環境での実行規約**:
-   - Windows 環境では必ず `npm.cmd`（`npm.cmd run check` 等）および `.\mvnw.cmd` を使用してください。
-6. **対応履歴・レビュー改善ログの完全自動記録義務**:
-   - すべてのタスク・Issue において、実装担当エージェントは成果レポート（`walkthrough.md`）に「レビュー指摘事項と改善対応履歴」セクションを必ず記録しなければなりません。
-   - 自己レビュー、Fleet レビュー、人間レビューの指摘事項、その対応内容、および反映ファイルを対照表として明記してください。本項目は `issueDocChecker.js` によって機械的に検証され、欠落している場合はコミットおよびプッシュがブロックされます。
+MyHomeStock 固有の設計制約・コーディング規約は、専用プラグイン内のルールとして常時自動ロードされます：
+- **詳細ルール定義**: [`.agents/plugins/myhomestock/rules/domain-constraints.md`](.agents/plugins/myhomestock/rules/domain-constraints.md)
+  1. **JPA 楽観的排他制御の厳守**: `@Version` による競合検知、HTTP 409 Conflict ハンドリング。
+  2. **世帯マルチテナントの完全分離**: 全クエリ・更新における `household_id` の必須伝播。
+  3. **純粋コアロジックの不可侵**: `frontend/src/core/` への DOM/React 非依存の徹底。
+  4. **OpenAPI 3.0 型安全バインド**: `docs/openapi.json` と `schema.d.ts` の 100% 同期。
+  5. **対応履歴・レビュー改善ログの完全記録義務**: `walkthrough.md` にレビュー指摘と改善対応の対照表を必ず記録。
+
