@@ -14,6 +14,7 @@
 | **[ADR-0007](0007-consolidated-oci-single-jar.md)** | OCI統合単一コンテナ/Single JARアーキテクチャへの移行および世帯マルチテナント基盤の導入 | 承認済 | 2026-09-05 |
 | **[ADR-0008](0008-development-harness-and-quality-governance.md)** | 4ドキュメントIssue管理・モジュール式チェッカー・独立AIレビューによる開発ガバナンスハーネスの導入 | 承認済 | 2026-09-06 |
 | **[ADR-0009](0009-adopt-antigravity-review-loop-plugin.md)** | antigravity-review-loop 公式プラグインの導入 (Git Submodule) と重複ハーネス機能の一元化 | 承認済 | 2026-09-11 |
+| **[ADR-0010](0010-google-oauth2-database-household-authorization.md)** | Google OAuth2認証とデータベース駆動型世帯・メンバー管理（パターンB）の導入 | 承認済 | 2026-09-14 |
 
 ---
 

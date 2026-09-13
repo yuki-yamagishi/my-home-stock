@@ -22,6 +22,18 @@ spring:
   flyway:
     enabled: false
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope:
+              - openid
+              - profile
+              - email
+
 springdoc:
   api-docs:
     enabled: true

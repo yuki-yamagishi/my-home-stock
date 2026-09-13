@@ -69,6 +69,9 @@ async function syncApi() {
 export type StockItem = components['schemas']['StockItemResponseDto'];
 export type StockItemInput = components['schemas']['StockItemRequestDto'];
 export type HealthResponse = components['schemas']['HealthResponseDto'];
+export type AuthUser = components['schemas']['AuthUserResponseDto'];
+export type HouseholdMember = components['schemas']['HouseholdMemberResponseDto'];
+export type HouseholdMemberInput = components['schemas']['HouseholdMemberRequestDto'];
 `;
       fs.writeFileSync(OUTPUT_TYPES_PATH, content, 'utf-8');
     }

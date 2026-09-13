@@ -1,4 +1,11 @@
-import type { HealthResponse, StockItem, StockItemInput } from './schema';
+import type {
+  HealthResponse,
+  StockItem,
+  StockItemInput,
+  AuthUser,
+  HouseholdMember,
+  HouseholdMemberInput,
+} from './schema';
 
 const API_BASE = '/api/v1';
 
@@ -16,6 +23,7 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
@@ -45,8 +53,27 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  // Auth API
+  getCurrentUser: () => request<AuthUser>('/auth/me'),
+  logout: async () => {
+    await fetch('/api/v1/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
+  },
+
+  // Household API
+  getHouseholdMembers: () => request<HouseholdMember[]>('/households/members'),
+  inviteHouseholdMember: (data: HouseholdMemberInput) =>
+    request<HouseholdMember>('/households/members', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Health API
   getHealth: () => request<HealthResponse>('/health'),
 
+  // Stocks API
   getStocks: (category?: string) => {
     const query = category ? `?category=${encodeURIComponent(category)}` : '';
     return request<StockItem[]>(`/stocks${query}`);
