@@ -1,4 +1,4 @@
-﻿services:
+services:
   caddy:
     image: caddy:2-alpine
     container_name: myhomestock-caddy
@@ -41,11 +41,16 @@
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/myhomestock
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       SPRING_PROFILES_ACTIVE: prod
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-google-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dummy-google-client-secret}
     expose:
       - "8080"
 
