@@ -1,6 +1,6 @@
 # ISSUE-006: antigravity-review-loop プラグインの Git Submodule 導入および重複機能の整理
 
-- **ステータス**: 🟣 進行中 (`status: in-progress`)
+- **ステータス**: ✅ 完了 (`status: closed`)
 - **優先度**: 最高 (Critical / Governance)
 - **カテゴリ**: `type: harness`, プラグイン統合, 重複排除, 開発基盤, ガバナンス
 - **対象**: Antigravity Plugin / Git Submodule / `.agents/` / `scripts/`
