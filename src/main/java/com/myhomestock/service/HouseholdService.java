@@ -84,7 +84,10 @@ public class HouseholdService {
         Optional<User> existingUser = userRepository.findByEmail(email);
         Long linkedUserId = existingUser.map(User::getId).orElse(null);
         OffsetDateTime joinedAt = existingUser.isPresent() ? OffsetDateTime.now() : null;
-        String role = (requestDto.role() != null && !requestDto.role().isBlank()) ? requestDto.role() : "MEMBER";
+        String role = (requestDto.role() != null && !requestDto.role().isBlank()) ? requestDto.role().trim().toUpperCase() : "MEMBER";
+        if (!"MEMBER".equals(role) && !"OWNER".equals(role)) {
+            throw new IllegalArgumentException("ロールは MEMBER または OWNER を指定してください。");
+        }
 
         HouseholdMember member = new HouseholdMember(householdId, linkedUserId, email, role, joinedAt);
         HouseholdMember saved = householdMemberRepository.save(member);

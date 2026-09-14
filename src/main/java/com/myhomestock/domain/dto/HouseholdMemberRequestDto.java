@@ -11,6 +11,7 @@ public record HouseholdMemberRequestDto(
         @Schema(description = "招待する家族のGoogleメールアドレス", example = "family@gmail.com")
         String email,
 
-        @Schema(description = "ロール（未指定時は MEMBER）", example = "MEMBER")
+        @jakarta.validation.constraints.Pattern(regexp = "^(?i)(MEMBER|OWNER)$", message = "ロールは MEMBER または OWNER を指定してください")
+        @Schema(description = "ロール（未指定時は MEMBER、許可値: MEMBER, OWNER）", example = "MEMBER")
         String role
 ) {}

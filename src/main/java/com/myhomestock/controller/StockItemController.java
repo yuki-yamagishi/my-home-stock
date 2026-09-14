@@ -30,7 +30,8 @@ public class StockItemController {
         if (user != null && user.getHouseholdId() != null) {
             return String.valueOf(user.getHouseholdId());
         }
-        return "default";
+        throw new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.UNAUTHORIZED, "所属世帯が特定できません。ログインしてください。");
     }
 
     @GetMapping

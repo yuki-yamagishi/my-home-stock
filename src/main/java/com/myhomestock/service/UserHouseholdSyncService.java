@@ -106,7 +106,7 @@ public class UserHouseholdSyncService {
         }
 
         // 3. 所属世帯の解決
-        List<HouseholdMember> allMemberships = householdMemberRepository.findByUserId(userId);
+        List<HouseholdMember> allMemberships = householdMemberRepository.findByUserIdOrderByCreatedAtAsc(userId);
         HouseholdMember activeMember = null;
 
         if (!allMemberships.isEmpty()) {
