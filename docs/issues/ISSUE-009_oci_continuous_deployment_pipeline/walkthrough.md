@@ -58,3 +58,7 @@
 | `[should]` | Watchtower による DB コンテナ巻き込み再起動リスクおよび GHCR 認証 | `app` コンテナのみに `com.centurylinklabs.watchtower.enable=true` を付与し、Watchtower 側で `--label-enable` を指定して DB コンテナを物理除外。 | `issue.md`, `plan.md`, `docker-compose.prod.yml` |
 | `[should]` | GHCR 自動パージの権限（`packages: write`）と保持ルールの確定 | ワークフロー権限に `packages: write` を明記し、`latest` および直近 5 バージョンを恒久保護する確定値を設定・実装。 | `issue.md`, `plan.md`, `deploy.yml` |
 | `[imo]` | フロントエンドビルドと Maven パッケージングのキャッシュ最適化 | `actions/cache` により Maven 依存関係および Node.js キャッシュを活用し、全工程 10分以内の完了を確実化。 | `plan.md`, `deploy.yml` |
+| `[must]` | `docker-compose.prod.yml` で Caddy サービスが誤削除されポート 8080 が生公開されていた（HTTPS 喪失による OAuth2/Cookie secure/世帯認可機能不全リスク） | Caddy サービスを完全復元し、ポート 80/443 をバインド。生ポート 8080 をホスト非公開（`expose: 8080`）に隠蔽し、Watchtower 除外ラベルを付与。 | `docker-compose.prod.yml`, `plan.md` |
+| `[should]` | `deploy.yml` に並行実行制御（`concurrency`）が未設定のため、連続 push / マージ時に `latest` タグが競合上書きされるリスク | `concurrency: { group: cd-deploy, cancel-in-progress: false }` をトップレベルに追加し順次実行を保証。 | `.github/workflows/deploy.yml` |
+| `[should]` | `Dockerfile.prod` で `COPY` と `RUN chown` が分離しており、レイヤー二重化によりイメージサイズが肥大化 | `COPY --chown=appuser:appgroup ${JAR_FILE} app.jar` に統合し、単一レイヤー化。HEALTHCHECK に `--start-period=20s` を付与。 | `Dockerfile.prod` |
+| `[should]` | `deploy.yml` のパッケージ名ハードコード | `package-name: ${{ github.event.repository.name }}` に変数化。 | `.github/workflows/deploy.yml` |

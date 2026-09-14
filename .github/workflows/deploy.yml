@@ -4,6 +4,11 @@ on:
   push:
     branches: [master, main]
 
+# Concurrency control to prevent race conditions during consecutive pushes
+concurrency:
+  group: cd-deploy
+  cancel-in-progress: false
+
 permissions:
   contents: read
   packages: write
@@ -61,12 +66,6 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-          cache-dependency-path: frontend/package.json
-
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
@@ -123,7 +122,7 @@ jobs:
         uses: actions/delete-package-versions@v5
         continue-on-error: true # Ensure workflow does not break on initial repository setup
         with:
-          package-name: 'my-home-stock'
+          package-name: ${{ github.event.repository.name }}
           package-type: 'container'
           min-versions-to-keep: 5
           delete-only-untagged-versions: 'false'

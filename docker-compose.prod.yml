@@ -1,4 +1,20 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: myhomestock-caddy
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
   postgres:
     image: postgres:16-alpine
     container_name: myhomestock-postgres
@@ -41,8 +57,9 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-google-client-id}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dummy-google-client-secret}
       ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
-    ports:
-      - "8080:8080"
+    # In production, raw Spring Boot port 8080 is not exposed to host; routed via Caddy HTTPS reverse proxy
+    expose:
+      - "8080"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/v1/health"]
       interval: 10s
@@ -63,4 +80,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local

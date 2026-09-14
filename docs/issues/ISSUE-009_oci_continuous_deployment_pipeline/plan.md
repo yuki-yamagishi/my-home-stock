@@ -31,19 +31,25 @@
 - ※ 既存のローカル用 [`Dockerfile`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/Dockerfile) は一切変更せず、既存の DX（`docker-compose.yml`）を保護。
 
 ### ステップ 2: OCI 本番用スタック定義 (`docker-compose.prod.yml`) の作成
+- `caddy` サービス:
+  - `caddy:2-alpine` (HTTPS 443 / HTTP 80 リダイレクト、Let's Encrypt 自動証明書)
+  - `Caddyfile` マウントおよびデータボリューム `caddy_data`, `caddy_config`
+  - ラベル: `com.centurylinklabs.watchtower.enable: "false"` (Watchtower 除外)
+  - `app` への `reverse_proxy`
 - `app` サービス:
-  - イメージ: `ghcr.io/yuki-yamagishi/myhomestock:latest`
+  - イメージ: `ghcr.io/yuki-yamagishi/my-home-stock:latest`
   - ラベル: `com.centurylinklabs.watchtower.enable: "true"`（Watchtower 監視対象指定）
-  - ヘルスチェック: `wget -qO- http://localhost:8080/api/v1/health || exit 1`
-  - ポート: `8080:8080`
+  - 生ポート 8080 はホスト非公開とし `expose: 8080`（Caddy 経由でのみアクセス許可）
+  - ヘルスチェック: `/api/v1/health` へのポーリング
   - 環境変数: PostgreSQL 接続情報、Google OAuth2 認証情報
 - `postgres` サービス:
   - `postgres:16-alpine`
-  - 外部ネットワークへのポート公開なし（内部ネットワーク `default` 経由）
+  - 外部ネットワークへのポート公開なし（内部ネットワーク `expose: 5432` のみ）
   - ボリューム: `postgres_data:/var/lib/postgresql/data`
+  - ラベル: `com.centurylinklabs.watchtower.enable: "false"` (Watchtower 除外)
 - `watchtower` サービス:
   - `containrrr/watchtower`
-  - オプション: `--interval 300`（5分間隔）、`--label-enable`（DB コンテナ除外）、`--cleanup`（古いコンテナ削除）
+  - オプション: `--interval 300`（5分間隔）、`--label-enable`（DB・Caddy コンテナ除外）、`--cleanup`（古いコンテナ削除）
   - Docker ソケットマウント: `/var/run/docker.sock:/var/run/docker.sock`
 
 ### ステップ 3: GitHub Actions CD ワークフロー (`deploy.yml`) の作成

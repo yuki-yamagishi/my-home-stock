@@ -12,12 +12,9 @@ RUN apk add --no-cache tzdata && \
 # Create non-root user for container security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy pre-built Single JAR from host
+# Copy pre-built Single JAR directly with ownership to avoid duplicate layer size
 ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
-
-# Ensure proper permissions
-RUN chown appuser:appgroup app.jar
+COPY --chown=appuser:appgroup ${JAR_FILE} app.jar
 
 USER appuser:appgroup
 
@@ -25,7 +22,7 @@ ENV PORT=8080
 ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
 
-HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
   CMD wget -qO- http://localhost:8080/api/v1/health || exit 1
 
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
