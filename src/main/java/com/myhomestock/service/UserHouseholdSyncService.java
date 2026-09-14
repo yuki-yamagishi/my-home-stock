@@ -45,23 +45,18 @@ public class UserHouseholdSyncService {
         }
         String normalized = email.trim().toLowerCase();
 
-        // 1. 既に登録済みの既存ユーザーは許可
-        if (userRepository.findByEmail(normalized).isPresent()) {
-            return true;
-        }
-
-        // 2. 既存世帯オーナーから事前に招待されている家族メンバーは許可
-        if (!householdMemberRepository.findByInvitedEmail(normalized).isEmpty()) {
-            return true;
-        }
-
-        // 3. 環境変数・設定ファイルの許可ホワイトリストに含まれているか
+        // 1. 環境変数・設定ファイルの許可ホワイトリストに含まれているか
         if (allowedEmailsConfig != null && !allowedEmailsConfig.isBlank()) {
             for (String allowed : allowedEmailsConfig.split(",")) {
                 if (normalized.equalsIgnoreCase(allowed.trim())) {
                     return true;
                 }
             }
+        }
+
+        // 2. 既存世帯オーナーから事前に招待されている家族メンバーは許可（または所属メンバー）
+        if (!householdMemberRepository.findByInvitedEmail(normalized).isEmpty()) {
+            return true;
         }
 
         return false;
