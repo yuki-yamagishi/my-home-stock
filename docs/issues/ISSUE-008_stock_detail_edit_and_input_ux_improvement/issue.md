@@ -1,6 +1,6 @@
 # [ISSUE-008] 在庫詳細編集モーダル（EditStockModal）の実装と入力UI/UX改善
 
-* **ステータス**: 🟠 `status: in-progress`
+* **ステータス**: 🟢 `status: completed`
 * **種別**: 🟢 `type: feature` / 🎨 `type: ui/ux`
 * **担当者**: AIエージェント
 * **作成日**: 2026-09-14
