@@ -1,0 +1,31 @@
+# Production Single-Stage Dockerfile for OCI Deployment (MyHomeStock)
+# Expects pre-built Single JAR at target/*.jar (built by GitHub Actions native runner)
+# Eliminates heavy QEMU compilation for ARM64 (Ampere A1) architecture
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Install tzdata for Asia/Tokyo timezone support if needed
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+    echo "Asia/Tokyo" > /etc/timezone
+
+# Create non-root user for container security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy pre-built Single JAR from host
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+
+# Ensure proper permissions
+RUN chown appuser:appgroup app.jar
+
+USER appuser:appgroup
+
+ENV PORT=8080
+ENV SPRING_PROFILES_ACTIVE=prod
+EXPOSE 8080
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
+  CMD wget -qO- http://localhost:8080/api/v1/health || exit 1
+
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
