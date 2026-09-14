@@ -112,12 +112,12 @@
 
 ### 5.2. PR作成前プロセス完了基準 (Pre-PR Process DoD)
 
-- [ ] `EditStockModal.tsx` が実装され、一覧カードから起動できること
-- [ ] カテゴリ定数および `normalizeCategory` が `categories.ts` に集約され、単体テストで検証されていること
-- [ ] クイック追加フォームおよび編集モーダルで賞味期限をクリアできること
-- [ ] `npm run check:fast`（TypeScript Strict 型検査）が 100% エラーゼロで合格すること
-- [ ] `npm run test:related`（単体テスト）が全件 PASS すること
-- [ ] `npm run check:docs`（ドキュメント整合性・OpenAPI 同期ガード）が合格すること
+- [x] `EditStockModal.tsx` が実装され、一覧カードから起動できること
+- [x] カテゴリ定数および `normalizeCategory` が `categories.ts` に集約され、単体テストで検証されていること
+- [x] クイック追加フォームおよび編集モーダルで賞味期限をクリアできること
+- [x] `npm run check:fast`（TypeScript Strict 型検査）が 100% エラーゼロで合格すること
+- [x] `npm run test:related`（単体テスト）が全件 PASS すること
+- [x] `npm run check:docs`（ドキュメント整合性・OpenAPI 同期ガード）が合格すること
 
 ### 5.3. マージ前品質基準 (Pre-Merge DoD)
 
