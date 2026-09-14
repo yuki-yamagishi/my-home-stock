@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserHouseholdSyncService {
@@ -45,7 +46,7 @@ public class UserHouseholdSyncService {
         }
         String normalized = email.trim().toLowerCase();
 
-        // 1. 環境変数・設定ファイルの許可ホワイトリストに含まれているか
+        // 1. 環境変数・設定ファイルの許可ホワイトリストに含まれているか（オーナー）
         if (allowedEmailsConfig != null && !allowedEmailsConfig.isBlank()) {
             for (String allowed : allowedEmailsConfig.split(",")) {
                 if (normalized.equalsIgnoreCase(allowed.trim())) {
@@ -54,8 +55,14 @@ public class UserHouseholdSyncService {
             }
         }
 
-        // 2. 既存世帯オーナーから事前に招待されている家族メンバーは許可（または所属メンバー）
+        // 2. 既存世帯オーナーから事前に招待されている家族メンバー（未承認招待を含む）
         if (!householdMemberRepository.findByInvitedEmail(normalized).isEmpty()) {
+            return true;
+        }
+
+        // 3. 既にいずれかの世帯に正当に所属している既存アクティブメンバー
+        Optional<User> existingUser = userRepository.findByEmail(normalized);
+        if (existingUser.isPresent() && !householdMemberRepository.findByUserId(existingUser.get().getId()).isEmpty()) {
             return true;
         }
 
@@ -64,30 +71,31 @@ public class UserHouseholdSyncService {
 
     @Transactional
     public SyncResult syncUserAndHousehold(String sub, String email, String name, String picture) {
-        log.info("syncUserAndHousehold started for sub={}, email={}, name={}", sub, email, name);
+        String normalizedEmail = (email != null) ? email.trim().toLowerCase() : "";
+        log.info("syncUserAndHousehold started for sub={}, email={}, name={}", sub, normalizedEmail, name);
 
         // 門前払い物理ガード: 許可されていないアカウントは即時拒絶（DBへの一切の書き込みを防止）
-        if (!isAllowed(email)) {
-            log.warn("Access DENIED for unauthorized/uninvited account: email={}", email);
-            String denialMessage = "このアプリは許可された家族専用です。アクセス権限がありません。(" + email + ")";
+        if (!isAllowed(normalizedEmail)) {
+            log.warn("Access DENIED for unauthorized/uninvited account: email={}", normalizedEmail);
+            String denialMessage = "このアプリは許可された家族専用です。アクセス権限がありません。(" + normalizedEmail + ")";
             throw new OAuth2AuthenticationException(new OAuth2Error("access_denied", denialMessage, null), denialMessage);
         }
 
         // 1. ユーザーの永続化 / 更新
         User user = userRepository.findByGoogleSub(sub)
-                .or(() -> userRepository.findByEmail(email))
-                .orElseGet(() -> new User(sub, email, name, picture));
+                .or(() -> userRepository.findByEmail(normalizedEmail))
+                .orElseGet(() -> new User(sub, normalizedEmail, name, picture));
 
         user.setGoogleSub(sub);
-        user.setEmail(email);
-        user.setDisplayName(name != null ? name : email);
+        user.setEmail(normalizedEmail);
+        user.setDisplayName(name != null ? name : normalizedEmail);
         user.setPictureUrl(picture);
         user = userRepository.save(user);
         final Long userId = user.getId();
-        log.info("User persisted/updated: id={}, email={}", userId, email);
+        log.info("User persisted/updated: id={}, email={}", userId, normalizedEmail);
 
-        // 2. 未紐付けの招待レコード（invited_email = email かつ user_id is null）があればリンク
-        List<HouseholdMember> pendingInvites = householdMemberRepository.findByInvitedEmail(email);
+        // 2. 未紐付けの招待レコード（invited_email = normalizedEmail かつ user_id is null）があればリンク
+        List<HouseholdMember> pendingInvites = householdMemberRepository.findByInvitedEmail(normalizedEmail);
         for (HouseholdMember invite : pendingInvites) {
             if (invite.getUserId() == null) {
                 invite.setUserId(userId);
@@ -118,7 +126,7 @@ public class UserHouseholdSyncService {
             activeMember = new HouseholdMember(
                     newHousehold.getId(),
                     userId,
-                    email,
+                    normalizedEmail,
                     "OWNER",
                     OffsetDateTime.now()
             );

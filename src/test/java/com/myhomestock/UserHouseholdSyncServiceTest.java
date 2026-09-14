@@ -98,4 +98,37 @@ public class UserHouseholdSyncServiceTest {
         // 新規世帯は増えず、元の世帯に参加していること
         assertThat(householdRepository.count()).isEqualTo(1);
     }
+
+    @Test
+    @DisplayName("招待メールアドレスとGoogleアカウントの英大文字・小文字が異なっていても正常にリンク・参加できる")
+    void syncUser_invitedFamilyMember_withUpperCaseEmail_success() {
+        // 1. オーナーを作成
+        User owner = userRepository.save(new User("sub-owner", "yuki.yamagishi.contact@gmail.com", "オーナー", null));
+        Household household = householdRepository.save(new Household("ファミリー世帯", owner.getId()));
+        memberRepository.save(new HouseholdMember(household.getId(), owner.getId(), owner.getEmail(), "OWNER", OffsetDateTime.now()));
+
+        // 2. 家族メンバーを事前招待（小文字で保存）
+        memberRepository.save(new HouseholdMember(household.getId(), null, "family.test@example.com", "MEMBER", null));
+
+        // 3. 招待された家族が英大文字混じりでログイン
+        var result = syncService.syncUserAndHousehold("sub-family-case", "Family.Test@Example.com", "大文字家族", null);
+
+        assertThat(result).isNotNull();
+        assertThat(result.user().getEmail()).isEqualTo("family.test@example.com");
+        assertThat(result.role()).isEqualTo("MEMBER");
+        assertThat(result.household().getId()).isEqualTo(household.getId());
+        assertThat(householdRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("世帯から除名（HouseholdMember削除）された元家族メンバーは次回ログイン時に門前払いされる")
+    void syncUser_evictedMember_cannotLogin() {
+        // 1. 過去に参加していたユーザーがDBに存在するが、世帯所属レコードは削除されている
+        User exMember = userRepository.save(new User("sub-ex", "ex.member@example.com", "元メンバー", null));
+
+        // 2. ログイン試行 -> 所属世帯なし & ホワイトリスト外のため門前払い
+        assertThatThrownBy(() -> syncService.syncUserAndHousehold("sub-ex", "ex.member@example.com", "元メンバー", null))
+                .isInstanceOf(OAuth2AuthenticationException.class)
+                .hasMessageContaining("このアプリは許可された家族専用です");
+    }
 }
