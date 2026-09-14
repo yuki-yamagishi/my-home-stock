@@ -44,4 +44,9 @@
 
 | 重要度 | 指摘・改善提案 | 対応内容 | 反映ファイル |
 | :--- | :--- | :--- | :--- |
-| - | - | - | - |
+| `[should]` | 保存処理中 (`isSaving`) のキャンセル操作 (ESC/背景クリック/閉じるボタン) のガード抜け | ヘッダー「×」ボタンに `disabled={isSaving}` を付与し、ESCキーおよび背景クリックハンドラーに `if (!isSaving) onClose()` ガードを追加。通信中の誤操作によるモーダル喪失を防止。 | `EditStockModal.tsx` |
+| `[should]` | モーダル非表示時 (`isOpen=false`) における ESC キーの `window` リスナー常時登録 | `useEffect` の先頭に `if (!isOpen) return;` を追加し、依存配列に `isSaving` を追加して不要な常時イベント評価を防止。 | `EditStockModal.tsx` |
+| `[should]` | クイック追加フォームの日付クリアボタンとブラウザ標準ピッカーアイコンの重なり | 日付入力欄内側の `absolute right-2` 配置を廃止し、ラベル行右側に「期限をクリア」ボタンを再配置。WebKit/Blink系の日付ピッカーアイコンとの重複を解消。 | `App.tsx` |
+| `[should]` | 409 Conflict 発生時のモーダル状態未リセットによる再試行不能（無限競合ループ） | `onSave` 内の `updateMutation.mutate` に `onError` を追加し、`error instanceof ApiError && error.status === 409` 時に `setEditingItem(null)` を実行。古い `version` による無限競合ループを防止し最新一覧へ復帰。 | `App.tsx` |
+| `[imo]` | WAI-ARIA モーダル属性と画面高さ不足時のスクロール対応 | モーダル外枠に `role="dialog"`、`aria-modal="true"`、`aria-labelledby="edit-stock-title"` を付与し、`max-h-[90vh] flex flex-col` およびフォームの `overflow-y-auto` を適用。 | `EditStockModal.tsx` |
+| `[nits]` | `EditStockModal` 内における賞味期限クリアボタンの二重表示 | ラベル行の「期限をクリア」ボタンのみに一本化し、Input 側の重複ボタンを削除。 | `EditStockModal.tsx` |

@@ -36,6 +36,7 @@ import {
   getExpiryStatus,
   calculateStockSummary,
 } from './core/stockStatus';
+import { ApiError } from './api/client';
 import type { StockItem, StockItemInput, AuthUser } from './api/schema';
 
 interface DashboardProps {
@@ -290,28 +291,28 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">
-                    賞味・消費期限
-                  </label>
-                  <div className="relative flex items-center">
-                    <Input
-                      type="date"
-                      value={form.expiryDate || ''}
-                      onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                      className="pr-8"
-                    />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-slate-600">
+                      賞味・消費期限
+                    </label>
                     {form.expiryDate && (
                       <button
                         type="button"
                         onClick={() => setForm({ ...form, expiryDate: '' })}
-                        className="absolute right-2 p-1 text-slate-400 hover:text-slate-600 rounded"
+                        className="text-[11px] font-medium text-rose-600 hover:text-rose-700 flex items-center gap-0.5 hover:underline"
                         title="期限をクリア"
                         aria-label="期限をクリア"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-3 w-3" />
+                        クリア
                       </button>
                     )}
                   </div>
+                  <Input
+                    type="date"
+                    value={form.expiryDate || ''}
+                    onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+                  />
                 </div>
               </div>
 
@@ -635,6 +636,13 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
               {
                 onSuccess: () => {
                   setEditingItem(null);
+                },
+                onError: (error) => {
+                  // 409 Conflict (楽観的排他制御競合) 発生時は古い version を保持したモーダルを閉じ、
+                  // 再取得された最新一覧をユーザーに確認させる（無限競合ループを防止）
+                  if (error instanceof ApiError && error.status === 409) {
+                    setEditingItem(null);
+                  }
                 },
               }
             );

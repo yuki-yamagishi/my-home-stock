@@ -40,16 +40,17 @@ export function EditStockModal({
     }
   }, [item, isOpen]);
 
-  // ESC キー押下で閉じる
+  // ESC キー押下で閉じる (保存中または非表示時は無効)
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape' && !isSaving) {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isSaving]);
 
   if (!isOpen || !item) {
     return null;
@@ -80,35 +81,48 @@ export function EditStockModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={onClose}
+      onClick={() => {
+        if (!isSaving) {
+          onClose();
+        }
+      }}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-stock-title"
+        className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
               <Edit3 className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-800">在庫アイテムの編集</h2>
+              <h2 id="edit-stock-title" className="text-base font-bold text-slate-800">在庫アイテムの編集</h2>
               <p className="text-xs text-slate-500">詳細情報や補充基準、期限を更新します</p>
             </div>
           </div>
           <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            onClick={() => {
+              if (!isSaving) {
+                onClose();
+              }
+            }}
+            disabled={isSaving}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors disabled:opacity-40 disabled:pointer-events-none"
             title="閉じる"
             type="button"
+            aria-label="閉じる"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
           {/* 品名 */}
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1.5">
@@ -191,34 +205,20 @@ export function EditStockModal({
                 <button
                   type="button"
                   onClick={handleClearExpiry}
-                  className="text-[11px] font-medium text-rose-600 hover:text-rose-700 flex items-center gap-0.5 hover:underline"
+                  disabled={isSaving}
+                  className="text-[11px] font-medium text-rose-600 hover:text-rose-700 flex items-center gap-0.5 hover:underline disabled:opacity-40"
                 >
                   <X className="h-3 w-3" />
                   期限をクリア
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Input
-                type="date"
-                value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value)}
-                className="flex-1"
-              />
-              {expiryDate && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearExpiry}
-                  className="shrink-0 h-10 px-3 text-xs text-slate-600 hover:text-rose-600 hover:bg-rose-50"
-                  title="賞味期限を未設定に戻す"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  クリア
-                </Button>
-              )}
-            </div>
+            <Input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              disabled={isSaving}
+            />
           </div>
 
           {/* メモ */}
