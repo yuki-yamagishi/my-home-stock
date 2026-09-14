@@ -22,6 +22,7 @@
 | **[ISSUE-006](ISSUE-006_migrate_to_antigravity_review_loop_plugin/issue.md)** | antigravity-review-loop プラグインの Git Submodule 導入および重複機能の整理 | ✅ `status: closed` | 🛠️ `harness` | AIエージェント | 2026-09-11 |
 | **[ISSUE-007](ISSUE-007_google_oauth2_and_household_authorization/issue.md)** | Google OAuth2 認証とデータベース駆動型世帯管理および完全プライベートアクセスガードの導入 | 🟣 `status: in-progress` | 🟢 `feature` | AIエージェント | 2026-09-14 |
 | **[ISSUE-008](ISSUE-008_stock_detail_edit_and_input_ux_improvement/issue.md)** | 在庫詳細編集モーダル（EditStockModal）の実装と入力UI/UX改善 | 🟠 `status: todo` | 🟢 `feature` | 未定 | 2026-09-14 |
+| **[ISSUE-009](ISSUE-009_oci_continuous_deployment_pipeline/issue.md)** | OCI Always Free 向け GitHub Actions イミュータブル継続的デプロイ（CD）パイプラインの構築 | 🔵 `status: ready` | 🚀 `ci` | AIエージェント | 2026-09-15 |
 
 ---
 
