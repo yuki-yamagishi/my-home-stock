@@ -142,8 +142,15 @@ graph TB
   - `latest` タグおよび直近 5 バージョンは確実に保護・保持される。
   - 直近 5 バージョンより古いタグのみが安全に自動パージされ、ストレージ圧迫が防止されること。
 
-### 📋 プロセス・ドキュメント完了基準
-- [ ] `Dockerfile.prod` が作成され、既存の `Dockerfile`（ローカル環境）が破壊されていないこと
-- [ ] 本番用の `docker-compose.prod.yml` および環境変数設定手順が整備されていること
-- [ ] `docs/adr/0011-oci-continuous-deployment-ghcr.md` が作成され、`docs/adr/README.md` に登録されていること
-- [ ] `npm run check` によるドキュメント整合性ガードおよび全品質検証に合格すること
+### 5.1. PR作成前プロセス完了基準 (Pre-PR DoD)
+- [x] `Dockerfile.prod` が作成され、既存の `Dockerfile`（ローカル環境）が破壊されていないこと
+- [x] 本番用の `docker-compose.prod.yml` および環境変数設定手順が整備されていること
+- [x] `.github/workflows/deploy.yml` が作成され、CI 依存関係（`needs:`）および ARM64 GHCR push が定義されていること
+- [x] `docs/adr/0011-oci-continuous-deployment-ghcr.md` が作成され、`docs/adr/README.md` に登録されていること
+- [x] `npm run check` によるドキュメント整合性ガードおよび全品質検証に合格していること
+- [x] `.\mvnw.cmd test` によるバックエンドテスト全件（24 tests）が PASS していること
+
+### 5.2. マージ前完了基準 (Pre-Merge DoD)
+- [ ] PR 作成後の GitHub Actions CI が自動合格すること
+- [ ] 独立レビューサブエージェント合議制（`fleet_reviewer`, `fleet_completion_auditor`, `stock_domain_auditor`）の全 LGTM を受領すること
+- [ ] ユーザー（人間）による最終確認とマージが完了すること
