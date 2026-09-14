@@ -15,6 +15,9 @@ import { Button } from './components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Input } from './components/ui/input';
 import { Badge } from './components/ui/badge';
+import { LoginCard } from './components/auth/LoginCard';
+import { FamilyMembersModal } from './components/household/FamilyMembersModal';
+import { useAuth } from './hooks/useAuth';
 import {
   useStockList,
   useShoppingList,
@@ -29,9 +32,14 @@ import {
   getExpiryStatus,
   calculateStockSummary,
 } from './core/stockStatus';
-import type { StockItem, StockItemInput } from './api/schema';
+import type { StockItem, StockItemInput, AuthUser } from './api/schema';
 
-export function App() {
+interface DashboardProps {
+  user: AuthUser;
+  onOpenMembersModal: () => void;
+}
+
+function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<'stocks' | 'shopping' | 'expiring'>('stocks');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -137,6 +145,8 @@ export function App() {
         setActiveTab={setActiveTab}
         shoppingCount={summary.shortageCount}
         expiringCount={summary.expiringCount + summary.expiredCount}
+        user={user}
+        onOpenMembersModal={onOpenMembersModal}
       />
 
       <main className="container mx-auto max-w-5xl flex-1 px-4 py-6 space-y-6">
@@ -200,91 +210,137 @@ export function App() {
         {/* Quick Add Form */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Plus className="h-4 w-4 text-emerald-600" />
-              在庫クイック登録
+            <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Plus className="h-5 w-5 text-emerald-600" />
+              在庫クイック追加
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-6 gap-3">
-              <div className="sm:col-span-2">
-                <Input
-                  placeholder="品名 (例: 牛乳, トイレットペーパー)"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  required
-                />
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-medium text-slate-600 block mb-1">
+                    品名 <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="例: 牛乳, トイレットペーパー"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 block mb-1">
+                    カテゴリ
+                  </label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  >
+                    <option value="食品">食品</option>
+                    <option value="飲料">飲料</option>
+                    <option value="日用品">日用品</option>
+                    <option value="消耗品">消耗品</option>
+                    <option value="医薬品">医薬品</option>
+                    <option value="その他">その他</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <Input
-                  placeholder="カテゴリ"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                />
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-600 block mb-1">
+                    現在数量
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={form.quantity}
+                    onChange={(e) =>
+                      setForm({ ...form, quantity: parseInt(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 block mb-1">
+                    単位
+                  </label>
+                  <Input
+                    placeholder="個, 本, パック"
+                    value={form.unit}
+                    onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 block mb-1">
+                    最小閾値 (補充基準)
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={form.minThreshold}
+                    onChange={(e) =>
+                      setForm({ ...form, minThreshold: parseInt(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 block mb-1">
+                    賞味・消費期限
+                  </label>
+                  <Input
+                    type="date"
+                    value={form.expiryDate}
+                    onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+                  />
+                </div>
               </div>
+
               <div className="flex gap-2">
                 <Input
-                  type="number"
-                  min="0"
-                  placeholder="数量"
-                  value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: parseInt(e.target.value) || 0 })}
-                  className="w-20"
+                  placeholder="メモ (任意: ブランド名、保管場所など)"
+                  value={form.memo}
+                  onChange={(e) => setForm({ ...form, memo: e.target.value })}
+                  className="flex-1"
                 />
-                <Input
-                  placeholder="単位"
-                  value={form.unit}
-                  onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                  className="w-16"
-                />
-              </div>
-              <div>
-                <Input
-                  type="date"
-                  placeholder="賞味期限"
-                  value={form.expiryDate || ''}
-                  onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                />
-              </div>
-              <div>
                 <Button
                   type="submit"
                   disabled={createMutation.isPending || !form.name.trim()}
-                  className="w-full"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
-                  追加
+                  追加する
                 </Button>
               </div>
             </form>
           </CardContent>
         </Card>
 
-        {/* Tab 1: All Stocks */}
+        {/* Tab 1: Stocks List */}
         {activeTab === 'stocks' && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-              {/* Search & Filter */}
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="品名やメモで検索..."
+                  placeholder="在庫アイテムを検索..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 bg-white"
                 />
               </div>
 
-              {/* Category Filter Pills */}
-              <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
+              {/* Category Filter */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
                 {categories.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
                       selectedCategory === cat
                         ? 'bg-slate-900 text-white'
-                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                     }`}
                   >
                     {cat === 'all' ? 'すべて' : cat}
@@ -294,13 +350,15 @@ export function App() {
             </div>
 
             {isLoadingStocks ? (
-              <div className="py-12 text-center text-sm text-slate-500">読み込み中...</div>
+              <div className="py-12 text-center text-slate-500">
+                在庫データを読み込み中...
+              </div>
             ) : filteredStocks.length === 0 ? (
-              <div className="py-12 text-center text-sm text-slate-500">
-                該当する在庫アイテムがありません。上のフォームから登録してください。
+              <div className="py-12 text-center text-sm text-slate-500 bg-white rounded-xl border border-dashed border-slate-200">
+                該当する在庫アイテムがありません。
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {filteredStocks.map((item) => {
                   const shortage = isShortage(item.quantity, item.minThreshold);
                   const expiry = getExpiryStatus(item.expiryDate);
@@ -308,85 +366,91 @@ export function App() {
                   return (
                     <Card
                       key={item.id}
-                      className={`relative transition-all hover:shadow-md ${
-                        shortage ? 'border-l-4 border-l-rose-500' : ''
+                      className={`transition-all ${
+                        shortage
+                          ? 'border-rose-300 bg-rose-50/20'
+                          : 'hover:border-slate-300'
                       }`}
                     >
                       <CardContent className="p-4 space-y-3">
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-2">
                           <div>
-                            <span className="text-xs font-medium text-slate-500">
-                              {item.category}
-                            </span>
-                            <h4 className="text-base font-bold text-slate-900 leading-tight">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-slate-500">
+                                {item.category}
+                              </span>
+                              {shortage && (
+                                <Badge variant="destructive">補充が必要</Badge>
+                              )}
+                              {(expiry.status === 'expired' || expiry.status === 'warning') && (
+                                <Badge
+                                  variant={
+                                    expiry.status === 'expired'
+                                      ? 'destructive'
+                                      : 'warning'
+                                  }
+                                >
+                                  {expiry.label}
+                                </Badge>
+                              )}
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900 mt-0.5">
                               {item.name}
-                            </h4>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {shortage && (
-                              <Badge variant="destructive">不足</Badge>
-                            )}
-                            {expiry.status !== 'none' && (
-                              <Badge
-                                variant={
-                                  expiry.status === 'expired'
-                                    ? 'destructive'
-                                    : expiry.status === 'warning'
-                                    ? 'warning'
-                                    : 'outline'
-                                }
-                              >
-                                {expiry.label}
-                              </Badge>
+                            </h3>
+                            {item.memo && (
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                {item.memo}
+                              </p>
                             )}
                           </div>
+
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
+                            title="削除"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
 
-                        {/* Quantity controls */}
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-2xl font-black text-slate-900">
-                              {item.quantity}
-                            </span>
-                            <span className="text-xs text-slate-500 font-medium">
-                              {item.unit}
-                            </span>
-                            <span className="text-[10px] text-slate-400 ml-1">
-                              (下限: {item.minThreshold})
-                            </span>
+                        <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                          <div className="text-xs text-slate-500">
+                            基準: {item.minThreshold} {item.unit}
+                            {item.expiryDate && (
+                              <span className="ml-2 text-slate-400">
+                                期限: {item.expiryDate}
+                              </span>
+                            )}
                           </div>
 
-                          <div className="flex items-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => handleConsume(item)}
-                              disabled={item.quantity <= 0 || consumeMutation.isPending}
-                              className="h-8 w-8 p-0"
-                              title="1つ消費"
-                            >
-                              <Minus className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => handleAddOne(item)}
-                              disabled={updateMutation.isPending}
-                              className="h-8 w-8 p-0"
-                              title="1つ補充"
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDelete(item.id)}
-                              disabled={deleteMutation.isPending}
-                              className="h-8 w-8 p-0 text-slate-400 hover:text-rose-600"
-                              title="削除"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-slate-900">
+                              {item.quantity}
+                              <span className="text-xs font-normal text-slate-500 ml-1">
+                                {item.unit}
+                              </span>
+                            </span>
+
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleConsume(item)}
+                                disabled={item.quantity <= 0 || consumeMutation.isPending}
+                              >
+                                <Minus className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleAddOne(item)}
+                                disabled={updateMutation.isPending}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -403,7 +467,7 @@ export function App() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-700">
-                補充が必要なアイテム（現在数量 ≦ 下限閾値）
+                買い出しが必要なアイテム (最小閾値以下)
               </h3>
               <Badge variant="destructive">{shoppingList.length} 件</Badge>
             </div>
@@ -411,28 +475,28 @@ export function App() {
             {shoppingList.length === 0 ? (
               <div className="py-12 text-center text-sm text-slate-500 bg-white rounded-xl border border-dashed border-slate-200">
                 <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                不足しているアイテムはありません。すべて十分な在庫があります！
+                現在、補充が必要な在庫アイテムはありません！
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {shoppingList.map((item) => (
-                  <Card key={item.id} className="border-rose-200 bg-rose-50/20">
+                  <Card key={item.id} className="border-rose-200 bg-rose-50/30">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div>
-                        <span className="text-xs text-rose-600 font-medium">
-                          {item.category}
-                        </span>
-                        <h4 className="text-base font-bold text-slate-900">{item.name}</h4>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          残り: <span className="text-rose-600 font-bold">{item.quantity}</span> / 下限: {item.minThreshold} {item.unit}
+                        <span className="text-xs text-slate-500">{item.category}</span>
+                        <h4 className="text-base font-bold text-slate-900">
+                          {item.name}
+                        </h4>
+                        <p className="text-xs text-rose-600 font-medium mt-1">
+                          現在: {item.quantity} {item.unit} / 補充目安: {item.minThreshold}{' '}
+                          {item.unit}
                         </p>
                       </div>
                       <Button
                         size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
                         onClick={() => handleAddOne(item)}
-                        disabled={updateMutation.isPending}
                       >
-                        <Plus className="h-4 w-4 mr-1" />
                         購入完了 (+1)
                       </Button>
                     </CardContent>
@@ -443,7 +507,7 @@ export function App() {
           </div>
         )}
 
-        {/* Tab 3: Expiring Warning List */}
+        {/* Tab 3: Expiring Items */}
         {activeTab === 'expiring' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -508,4 +572,53 @@ export function App() {
     </div>
   );
 }
+
+export function App() {
+  const { user, isAuthenticated, isLoading, loginWithGoogle } = useAuth();
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+          <p className="text-sm font-medium text-slate-500">認証情報を確認中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <PwaInstallBanner />
+        <Header
+          activeTab="stocks"
+          setActiveTab={() => {}}
+          shoppingCount={0}
+          expiringCount={0}
+        />
+        <main className="container mx-auto max-w-5xl flex-1 px-4">
+          <LoginCard onLogin={loginWithGoogle} />
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Dashboard
+        user={user}
+        onOpenMembersModal={() => setIsMembersModalOpen(true)}
+      />
+      <FamilyMembersModal
+        isOpen={isMembersModalOpen}
+        onClose={() => setIsMembersModalOpen(false)}
+        householdName={user.householdName}
+        isOwner={user.role === 'OWNER'}
+      />
+    </>
+  );
+}
+
 export default App;

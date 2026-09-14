@@ -1,4 +1,18 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: myhomestock-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
   postgres:
     image: postgres:16-alpine
     container_name: myhomestock-postgres
@@ -6,10 +20,10 @@ services:
     environment:
       POSTGRES_DB: myhomestock
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       TZ: Asia/Tokyo
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,14 +47,17 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/myhomestock
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       SPRING_PROFILES_ACTIVE: prod
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-google-client-id}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dummy-google-client-secret}
-      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
 
 volumes:
   postgres_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local

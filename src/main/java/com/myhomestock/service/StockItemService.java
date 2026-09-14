@@ -80,7 +80,7 @@ public class StockItemService {
 
     @Transactional
     public StockItemResponseDto createStockItem(StockItemRequestDto dto, String householdId) {
-        String hid = resolveHouseholdId(dto.getHouseholdId() != null ? dto.getHouseholdId() : householdId);
+        String hid = resolveHouseholdId(householdId);
 
         StockItem entity = StockItem.builder()
                 .householdId(hid)

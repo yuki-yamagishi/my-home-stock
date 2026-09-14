@@ -1,10 +1,7 @@
 # Multi-stage Dockerfile for MyHomeStock Single JAR (Spring Boot 4 + React PWA)
-# Stage 1: Build JAR with bundled frontend static assets
-FROM eclipse-temurin:21-jdk-alpine AS builder
+# Stage 1: Build JAR with bundled frontend static assets (glibc for universal Node.js ARM64 support)
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /workspace
-
-# Install bash & curl for mvnw and node download
-RUN apk add --no-cache bash curl
 
 # Copy maven wrapper & build descriptor
 COPY .mvn .mvn

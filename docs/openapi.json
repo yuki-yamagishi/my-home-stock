@@ -276,6 +276,86 @@
           }
         }
       }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "現在ログイン中のユーザー情報取得",
+        "description": "現在ログインしているユーザー、所属世帯、ロール情報を取得します。未認証時は 401 を返却します。",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUserResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/households/members": {
+      "get": {
+        "tags": ["Household"],
+        "summary": "所属世帯メンバー一覧取得",
+        "description": "ログイン中ユーザーの世帯メンバー一覧を取得します。",
+        "operationId": "getMembers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HouseholdMemberResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Household"],
+        "summary": "家族メンバー招待",
+        "description": "指定したGoogleメールアドレスを所属世帯に招待します。",
+        "operationId": "inviteMember",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdMemberRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdMemberResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -398,6 +478,96 @@
           }
         },
         "required": ["id", "name", "category", "quantity", "unit", "minThreshold", "version", "createdAt", "updatedAt"]
+      },
+      "AuthUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "email": {
+            "type": "string",
+            "example": "user@gmail.com"
+          },
+          "displayName": {
+            "type": "string",
+            "example": "山田 太郎"
+          },
+          "pictureUrl": {
+            "type": "string"
+          },
+          "householdId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "householdName": {
+            "type": "string",
+            "example": "マイホーム"
+          },
+          "role": {
+            "type": "string",
+            "example": "OWNER"
+          }
+        },
+        "required": ["userId", "email"]
+      },
+      "HouseholdMemberRequestDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "family@gmail.com"
+          },
+          "role": {
+            "type": "string",
+            "example": "MEMBER"
+          }
+        },
+        "required": ["email"]
+      },
+      "HouseholdMemberResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "householdId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          },
+          "email": {
+            "type": "string",
+            "example": "family@gmail.com"
+          },
+          "displayName": {
+            "type": "string",
+            "example": "山田 花子"
+          },
+          "role": {
+            "type": "string",
+            "example": "MEMBER"
+          },
+          "status": {
+            "type": "string",
+            "example": "JOINED"
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "householdId", "email", "role", "status"]
       }
     }
   }

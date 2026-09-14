@@ -112,6 +112,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 現在ログイン中のユーザー情報取得
+         * @description 現在ログインしているユーザー、所属世帯、ロール情報を取得します。未認証時は 401 を返却します。
+         */
+        get: operations["getCurrentUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 所属世帯メンバー一覧取得
+         * @description ログイン中ユーザーの世帯メンバー一覧を取得します。
+         */
+        get: operations["getMembers"];
+        put?: never;
+        /**
+         * 家族メンバー招待
+         * @description 指定したGoogleメールアドレスを所属世帯に招待します。
+         */
+        post: operations["inviteMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -180,6 +224,60 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        AuthUserResponseDto: {
+            /**
+             * Format: int64
+             * @example 1
+             */
+            userId: number;
+            /** @example user@gmail.com */
+            email: string;
+            /** @example 山田 太郎 */
+            displayName?: string;
+            pictureUrl?: string;
+            /**
+             * Format: int64
+             * @example 1
+             */
+            householdId?: number;
+            /** @example マイホーム */
+            householdName?: string;
+            /** @example OWNER */
+            role?: string;
+        };
+        HouseholdMemberRequestDto: {
+            /** @example family@gmail.com */
+            email: string;
+            /** @example MEMBER */
+            role?: string;
+        };
+        HouseholdMemberResponseDto: {
+            /**
+             * Format: int64
+             * @example 1
+             */
+            id: number;
+            /**
+             * Format: int64
+             * @example 1
+             */
+            householdId: number;
+            /**
+             * Format: int64
+             * @example 2
+             */
+            userId?: number;
+            /** @example family@gmail.com */
+            email: string;
+            /** @example 山田 花子 */
+            displayName?: string;
+            /** @example MEMBER */
+            role: string;
+            /** @example JOINED */
+            status: string;
+            /** Format: date-time */
+            joinedAt?: string;
         };
     };
     responses: never;
@@ -397,8 +495,96 @@ export interface operations {
             };
         };
     };
+    getCurrentUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthUserResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HouseholdMemberResponseDto"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inviteMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdMemberRequestDto"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HouseholdMemberResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
 }
 
 export type StockItem = components['schemas']['StockItemResponseDto'];
 export type StockItemInput = components['schemas']['StockItemRequestDto'];
 export type HealthResponse = components['schemas']['HealthResponseDto'];
+export type AuthUser = components['schemas']['AuthUserResponseDto'];
+export type HouseholdMember = components['schemas']['HouseholdMemberResponseDto'];
+export type HouseholdMemberInput = components['schemas']['HouseholdMemberRequestDto'];

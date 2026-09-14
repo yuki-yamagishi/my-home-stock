@@ -1,0 +1,17 @@
+﻿# Caddyfile for MyHomeStock Production Reverse Proxy
+# Automatic HTTPS via Let's Encrypt / ZeroSSL
+
+ymgs-mhs-j.duckdns.org {
+    encode gzip zstd
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Reverse proxy to Spring Boot 4 Single JAR backend
+    reverse_proxy app:8080
+}

@@ -43,8 +43,9 @@ public class StockItemRequestDto {
     @Schema(description = "楽観的排他制御用バージョン番号 (更新時は必須)", example = "0")
     private Long version;
 
+    @Deprecated
     @Size(max = 50, message = "世帯IDは50文字以内で指定してください")
-    @Schema(description = "世帯ID（家族共有グループ識別子・未指定時は default）", example = "default")
+    @Schema(description = "【非推奨】世帯ID（サーバー側で認証情報から自動解決するため指定は無視されます）", deprecated = true)
     private String householdId;
 
     public StockItemRequestDto() {
