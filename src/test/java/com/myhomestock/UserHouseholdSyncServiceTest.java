@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional
 public class UserHouseholdSyncServiceTest {
 
     @Autowired
@@ -50,7 +49,7 @@ public class UserHouseholdSyncServiceTest {
     void syncUser_allowedEmail_success() {
         // application-test.yml で allowed-emails に yuki.yamagishi.contact@gmail.com が登録済
         String email = "yuki.yamagishi.contact@gmail.com";
-        var result = syncService.syncUserAndHousehold("sub-123", email, "山岸", "https://pic.jpg");
+        var result = syncService.syncUserAndHousehold("sub-allowed-owner", email, "山岸", "https://pic.jpg");
 
         assertThat(result).isNotNull();
         assertThat(result.user().getEmail()).isEqualTo(email);
@@ -79,7 +78,7 @@ public class UserHouseholdSyncServiceTest {
     @DisplayName("事前に家族として招待されているメールアドレスはホワイトリスト外でもログイン・世帯参加できる")
     void syncUser_invitedFamilyMember_success() {
         // 1. オーナーを作成
-        User owner = userRepository.save(new User("sub-owner", "yuki.yamagishi.contact@gmail.com", "オーナー", null));
+        User owner = userRepository.save(new User("sub-owner-invite", "owner.invite@example.com", "オーナー", null));
         Household household = householdRepository.save(new Household("ファミリー世帯", owner.getId()));
         memberRepository.save(new HouseholdMember(household.getId(), owner.getId(), owner.getEmail(), "OWNER", OffsetDateTime.now()));
 
@@ -88,7 +87,7 @@ public class UserHouseholdSyncServiceTest {
         memberRepository.save(new HouseholdMember(household.getId(), null, invitedEmail, "MEMBER", null));
 
         // 3. 招待された家族がログイン
-        var result = syncService.syncUserAndHousehold("sub-family", invitedEmail, "家族メンバー", "https://family.jpg");
+        var result = syncService.syncUserAndHousehold("sub-family-invite", invitedEmail, "家族メンバー", "https://family.jpg");
 
         assertThat(result).isNotNull();
         assertThat(result.user().getEmail()).isEqualTo(invitedEmail);
@@ -103,7 +102,7 @@ public class UserHouseholdSyncServiceTest {
     @DisplayName("招待メールアドレスとGoogleアカウントの英大文字・小文字が異なっていても正常にリンク・参加できる")
     void syncUser_invitedFamilyMember_withUpperCaseEmail_success() {
         // 1. オーナーを作成
-        User owner = userRepository.save(new User("sub-owner", "yuki.yamagishi.contact@gmail.com", "オーナー", null));
+        User owner = userRepository.save(new User("sub-owner-case", "owner.case@example.com", "オーナー", null));
         Household household = householdRepository.save(new Household("ファミリー世帯", owner.getId()));
         memberRepository.save(new HouseholdMember(household.getId(), owner.getId(), owner.getEmail(), "OWNER", OffsetDateTime.now()));
 
