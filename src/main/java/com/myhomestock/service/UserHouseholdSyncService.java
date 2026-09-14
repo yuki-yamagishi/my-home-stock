@@ -8,6 +8,9 @@ import com.myhomestock.repository.HouseholdRepository;
 import com.myhomestock.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,20 +25,58 @@ public class UserHouseholdSyncService {
     private final UserRepository userRepository;
     private final HouseholdRepository householdRepository;
     private final HouseholdMemberRepository householdMemberRepository;
+    private final String allowedEmailsConfig;
 
     public UserHouseholdSyncService(UserRepository userRepository,
                                    HouseholdRepository householdRepository,
-                                   HouseholdMemberRepository householdMemberRepository) {
+                                   HouseholdMemberRepository householdMemberRepository,
+                                   @Value("${app.security.allowed-emails:}") String allowedEmailsConfig) {
         this.userRepository = userRepository;
         this.householdRepository = householdRepository;
         this.householdMemberRepository = householdMemberRepository;
+        this.allowedEmailsConfig = allowedEmailsConfig;
     }
 
     public record SyncResult(User user, Household household, String role) {}
 
+    public boolean isAllowed(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        String normalized = email.trim().toLowerCase();
+
+        // 1. 既に登録済みの既存ユーザーは許可
+        if (userRepository.findByEmail(normalized).isPresent()) {
+            return true;
+        }
+
+        // 2. 既存世帯オーナーから事前に招待されている家族メンバーは許可
+        if (!householdMemberRepository.findByInvitedEmail(normalized).isEmpty()) {
+            return true;
+        }
+
+        // 3. 環境変数・設定ファイルの許可ホワイトリストに含まれているか
+        if (allowedEmailsConfig != null && !allowedEmailsConfig.isBlank()) {
+            for (String allowed : allowedEmailsConfig.split(",")) {
+                if (normalized.equalsIgnoreCase(allowed.trim())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     @Transactional
     public SyncResult syncUserAndHousehold(String sub, String email, String name, String picture) {
         log.info("syncUserAndHousehold started for sub={}, email={}, name={}", sub, email, name);
+
+        // 門前払い物理ガード: 許可されていないアカウントは即時拒絶（DBへの一切の書き込みを防止）
+        if (!isAllowed(email)) {
+            log.warn("Access DENIED for unauthorized/uninvited account: email={}", email);
+            String denialMessage = "このアプリは許可された家族専用です。アクセス権限がありません。(" + email + ")";
+            throw new OAuth2AuthenticationException(new OAuth2Error("access_denied", denialMessage, null), denialMessage);
+        }
 
         // 1. ユーザーの永続化 / 更新
         User user = userRepository.findByGoogleSub(sub)

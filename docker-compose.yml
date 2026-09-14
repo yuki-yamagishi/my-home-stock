@@ -37,6 +37,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-google-client-id}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dummy-google-client-secret}
+      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
     ports:
       - "8080:8080"
 

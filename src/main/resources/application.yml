@@ -58,3 +58,7 @@ logging:
     com.myhomestock: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
+
+app:
+  security:
+    allowed-emails: ${ALLOWED_EMAILS:yuki.yamagishi.contact@gmail.com}
