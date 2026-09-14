@@ -8,6 +8,8 @@ import {
   Calendar,
   Layers,
   Search,
+  Pencil,
+  X,
 } from 'lucide-react';
 import { Header } from './components/layout/Header';
 import { PwaInstallBanner } from './components/layout/PwaInstallBanner';
@@ -17,6 +19,8 @@ import { Input } from './components/ui/input';
 import { Badge } from './components/ui/badge';
 import { LoginCard } from './components/auth/LoginCard';
 import { FamilyMembersModal } from './components/household/FamilyMembersModal';
+import { EditStockModal } from './components/stock/EditStockModal';
+import { STOCK_CATEGORIES, DEFAULT_CATEGORY } from './constants/categories';
 import { useAuth } from './hooks/useAuth';
 import {
   useStockList,
@@ -32,6 +36,7 @@ import {
   getExpiryStatus,
   calculateStockSummary,
 } from './core/stockStatus';
+import { ApiError } from './api/client';
 import type { StockItem, StockItemInput, AuthUser } from './api/schema';
 
 interface DashboardProps {
@@ -43,6 +48,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<'stocks' | 'shopping' | 'expiring'>('stocks');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [editingItem, setEditingItem] = useState<StockItem | null>(null);
 
   // Queries
   const { data: allStocks = [], isLoading: isLoadingStocks } = useStockList();
@@ -58,7 +64,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   // Form State
   const [form, setForm] = useState<StockItemInput>({
     name: '',
-    category: '食品',
+    category: DEFAULT_CATEGORY,
     quantity: 1,
     unit: '個',
     minThreshold: 1,
@@ -67,7 +73,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   });
 
   const categories = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(STOCK_CATEGORIES);
     allStocks.forEach((s) => s.category && set.add(s.category));
     return ['all', ...Array.from(set)];
   }, [allStocks]);
@@ -99,7 +105,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
         onSuccess: () => {
           setForm({
             name: '',
-            category: form.category || '食品',
+            category: form.category || DEFAULT_CATEGORY,
             quantity: 1,
             unit: '個',
             minThreshold: 1,
@@ -238,12 +244,11 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
                   >
-                    <option value="食品">食品</option>
-                    <option value="飲料">飲料</option>
-                    <option value="日用品">日用品</option>
-                    <option value="消耗品">消耗品</option>
-                    <option value="医薬品">医薬品</option>
-                    <option value="その他">その他</option>
+                    {STOCK_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -286,12 +291,26 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">
-                    賞味・消費期限
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-slate-600">
+                      賞味・消費期限
+                    </label>
+                    {form.expiryDate && (
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, expiryDate: '' })}
+                        className="text-[11px] font-medium text-rose-600 hover:text-rose-700 flex items-center gap-0.5 hover:underline"
+                        title="期限をクリア"
+                        aria-label="期限をクリア"
+                      >
+                        <X className="h-3 w-3" />
+                        クリア
+                      </button>
+                    )}
+                  </div>
                   <Input
                     type="date"
-                    value={form.expiryDate}
+                    value={form.expiryDate || ''}
                     onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
                   />
                 </div>
@@ -404,13 +423,24 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                             )}
                           </div>
 
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
-                            title="削除"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setEditingItem(item)}
+                              className="text-slate-400 hover:text-emerald-600 p-1 transition-colors"
+                              title="詳細編集"
+                              aria-label={`${item.name}を編集`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
+                              title="削除"
+                              aria-label={`${item.name}を削除`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="flex items-center justify-between border-t border-slate-100 pt-3">
@@ -492,13 +522,26 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                           {item.unit}
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                        onClick={() => handleAddOne(item)}
-                      >
-                        購入完了 (+1)
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900 border-slate-200"
+                          onClick={() => setEditingItem(item)}
+                          title="詳細編集"
+                          aria-label={`${item.name}を編集`}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1" />
+                          編集
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                          onClick={() => handleAddOne(item)}
+                        >
+                          購入完了 (+1)
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -552,14 +595,27 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                             数量: {item.quantity} {item.unit} | 期限日: {item.expiryDate}
                           </p>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handleConsume(item)}
-                          disabled={item.quantity <= 0 || consumeMutation.isPending}
-                        >
-                          消費 (-1)
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900 border-slate-200"
+                            onClick={() => setEditingItem(item)}
+                            title="詳細編集"
+                            aria-label={`${item.name}を編集`}
+                          >
+                            <Pencil className="h-3.5 w-3.5 mr-1" />
+                            編集
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleConsume(item)}
+                            disabled={item.quantity <= 0 || consumeMutation.isPending}
+                          >
+                            消費 (-1)
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   );
@@ -568,6 +624,31 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
             )}
           </div>
         )}
+
+        {/* Detail Edit Modal */}
+        <EditStockModal
+          item={editingItem}
+          isOpen={editingItem !== null}
+          onClose={() => setEditingItem(null)}
+          onSave={(id, data) => {
+            updateMutation.mutate(
+              { id, data },
+              {
+                onSuccess: () => {
+                  setEditingItem(null);
+                },
+                onError: (error) => {
+                  // 409 Conflict (楽観的排他制御競合) 発生時は古い version を保持したモーダルを閉じ、
+                  // 再取得された最新一覧をユーザーに確認させる（無限競合ループを防止）
+                  if (error instanceof ApiError && error.status === 409) {
+                    setEditingItem(null);
+                  }
+                },
+              }
+            );
+          }}
+          isSaving={updateMutation.isPending}
+        />
       </main>
     </div>
   );
