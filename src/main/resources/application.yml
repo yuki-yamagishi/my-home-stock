@@ -56,3 +56,5 @@ logging:
   level:
     root: INFO
     com.myhomestock: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG

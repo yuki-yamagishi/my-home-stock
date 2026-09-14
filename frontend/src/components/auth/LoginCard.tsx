@@ -1,4 +1,4 @@
-import { Package2, ShieldCheck, Users, Clock } from 'lucide-react';
+import { Package2, ShieldCheck, Users, Clock, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 
@@ -8,6 +8,9 @@ interface LoginCardProps {
 }
 
 export function LoginCard({ onLogin, isLoading }: LoginCardProps) {
+  const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const errorMessage = urlParams.get('error');
+
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md shadow-xl border-slate-200">
@@ -26,6 +29,15 @@ export function LoginCard({ onLogin, isLoading }: LoginCardProps) {
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {errorMessage && (
+            <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-xs sm:text-sm text-rose-700 border border-rose-200">
+              <AlertCircle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">ログインに失敗しました</p>
+                <p className="mt-0.5 text-xs text-rose-600 break-all">{errorMessage}</p>
+              </div>
+            </div>
+          )}
           <div className="space-y-3 rounded-xl bg-slate-50 p-4 text-xs sm:text-sm text-slate-600 border border-slate-100">
             <div className="flex items-center gap-2.5">
               <Users className="h-4 w-4 text-emerald-600 shrink-0" />
