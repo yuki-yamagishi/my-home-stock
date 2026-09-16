@@ -132,9 +132,10 @@ export function CreateStockModal({
             <label className="text-xs font-semibold text-slate-700 block">
               在庫の管理方法 <span className="text-rose-500">*</span>
             </label>
-            <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+            <div role="group" aria-label="在庫の管理方法" className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
               <button
                 type="button"
+                aria-pressed={stockType === 'QUANTITY'}
                 onClick={() => {
                   setStockType('QUANTITY');
                   if (unit === '袋') setUnit('個');
@@ -150,6 +151,7 @@ export function CreateStockModal({
               </button>
               <button
                 type="button"
+                aria-pressed={stockType === 'REMAINING_LEVEL'}
                 onClick={() => {
                   setStockType('REMAINING_LEVEL');
                   if (unit === '個') setUnit('袋');
@@ -218,7 +220,7 @@ export function CreateStockModal({
                   ※「怪しい」「すっからかん」で買い物リストに入ります
                 </span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div role="radiogroup" aria-label="初期残量ステータス" className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {REMAINING_LEVEL_ORDER.slice().reverse().map((lvl) => {
                   const cfg = REMAINING_LEVEL_CONFIGS[lvl];
                   const isSelected = remainingLevel === lvl;
@@ -226,6 +228,8 @@ export function CreateStockModal({
                     <button
                       key={lvl}
                       type="button"
+                      role="radio"
+                      aria-checked={isSelected}
                       onClick={() => setRemainingLevel(lvl)}
                       className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
                         isSelected

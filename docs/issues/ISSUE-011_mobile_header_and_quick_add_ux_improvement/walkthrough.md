@@ -50,4 +50,8 @@
 
 | 重要度 | 指摘・改善提案 | 対応内容 | 反映ファイル |
 | :--- | :--- | :--- | :--- |
-| - | (Fleet レビュー受領後に順次記録) | - | - |
+| `[must]` | App.tsx: FAB ボタンに Tailwind CSS 非標準のクラス `h-13 w-13` が指定されており、スタイルが未適用でタップターゲットが極小化するバグ | Tailwind 標準の `h-14 w-14`（56px）に変更し、モバイル推奨タップ領域を確実に確保 | [`frontend/src/App.tsx`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/frontend/src/App.tsx) |
+| `[should]` | App.tsx: FAB ボタンの固定位置（`bottom-20`）が iOS Safe Area を考慮しておらず、BottomNav と重なるリスク | `bottom-[calc(5rem+env(safe-area-inset-bottom,0px))]` に変更し、セーフエリアに連動して安全な余白を確保 | [`frontend/src/App.tsx`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/frontend/src/App.tsx) |
+| `[should]` | CreateStockModal.tsx: 管理方式トグルおよび4段階残量選択ボタンに選択状態を表す ARIA 属性が付与されていない | トグルに `role="group" aria-pressed`、残量選択に `role="radiogroup" role="radio" aria-checked` を追加 | [`frontend/src/components/stock/CreateStockModal.tsx`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/frontend/src/components/stock/CreateStockModal.tsx) |
+| `[should]` | BottomNav.tsx: 各タブボタンに `aria-current` がなく、バッジ件数のスクリーンリーダー向けテキストが不足 | アクティブタブに `aria-current="page"`、バッジ内部に `<span className="sr-only">` テキストを追加 | [`frontend/src/components/layout/BottomNav.tsx`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/frontend/src/components/layout/BottomNav.tsx) |
+| `[nits]` | Header.tsx: 未定義プレフィックス `xs:max-w-[160px]` の使用およびヘルスステータスドットの代替テキスト不足 | `xs:` プレフィックスを削除し `max-w-[140px]` に統一、ドット内に `<span className="sr-only">` を追加 | [`frontend/src/components/layout/Header.tsx`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/frontend/src/components/layout/Header.tsx) |

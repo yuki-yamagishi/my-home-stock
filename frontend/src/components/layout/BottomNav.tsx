@@ -24,6 +24,8 @@ export function BottomNav({
         <button
           type="button"
           onClick={() => setActiveTab('stocks')}
+          aria-label="在庫一覧"
+          aria-current={activeTab === 'stocks' ? 'page' : undefined}
           className={`flex flex-1 flex-col items-center justify-center py-1 rounded-lg transition-colors ${
             activeTab === 'stocks'
               ? 'text-emerald-600 font-bold'
@@ -40,6 +42,12 @@ export function BottomNav({
         <button
           type="button"
           onClick={() => setActiveTab('shopping')}
+          aria-label={
+            shoppingCount > 0
+              ? `買い物リスト（不足 ${shoppingCount}件）`
+              : '買い物リスト'
+          }
+          aria-current={activeTab === 'shopping' ? 'page' : undefined}
           className={`flex flex-1 flex-col items-center justify-center py-1 rounded-lg transition-colors ${
             activeTab === 'shopping'
               ? 'text-emerald-600 font-bold'
@@ -54,6 +62,7 @@ export function BottomNav({
                 className="absolute -top-1.5 -right-3 h-4 min-w-4 px-1 text-[10px] flex items-center justify-center font-bold"
               >
                 {shoppingCount > 99 ? '99+' : shoppingCount}
+                <span className="sr-only">件の不足アイテム</span>
               </Badge>
             )}
           </div>
@@ -64,6 +73,12 @@ export function BottomNav({
         <button
           type="button"
           onClick={() => setActiveTab('expiring')}
+          aria-label={
+            expiringCount > 0
+              ? `期限間近アイテム（注意 ${expiringCount}件）`
+              : '期限間近アイテム'
+          }
+          aria-current={activeTab === 'expiring' ? 'page' : undefined}
           className={`flex flex-1 flex-col items-center justify-center py-1 rounded-lg transition-colors ${
             activeTab === 'expiring'
               ? 'text-emerald-600 font-bold'
@@ -78,6 +93,7 @@ export function BottomNav({
                 className="absolute -top-1.5 -right-3 h-4 min-w-4 px-1 text-[10px] flex items-center justify-center font-bold"
               >
                 {expiringCount > 99 ? '99+' : expiringCount}
+                <span className="sr-only">件の期限注意アイテム</span>
               </Badge>
             )}
           </div>

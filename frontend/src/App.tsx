@@ -689,7 +689,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
         onClick={() => setIsCreateOpen(true)}
         title="在庫アイテムを追加"
         aria-label="在庫アイテムを追加"
-        className="fixed right-4 bottom-20 z-30 sm:hidden flex h-13 w-13 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl shadow-emerald-900/30 hover:bg-emerald-700 active:scale-95 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-300"
+        className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-30 sm:hidden flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl shadow-emerald-900/30 hover:bg-emerald-700 active:scale-95 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-300"
       >
         <Plus className="h-6 w-6" />
       </button>

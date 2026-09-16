@@ -60,7 +60,7 @@ export function Header({
               <Package2 className="h-4 w-4" />
             </div>
             {user?.householdName ? (
-              <span className="text-sm font-bold text-slate-900 truncate max-w-[130px] xs:max-w-[160px]">
+              <span className="text-sm font-bold text-slate-900 truncate max-w-[140px]">
                 {user.householdName}
               </span>
             ) : (
@@ -73,7 +73,11 @@ export function Header({
               className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${
                 isSuccess && health?.status === 'UP' ? 'bg-emerald-500' : 'bg-amber-400 animate-pulse'
               }`}
-            />
+            >
+              <span className="sr-only">
+                {isSuccess && health?.status === 'UP' ? 'API 稼働中' : '接続待機'}
+              </span>
+            </span>
           </div>
         </div>
 
