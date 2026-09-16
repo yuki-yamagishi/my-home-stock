@@ -39,6 +39,7 @@ ADR-0007（OCI Consolidated Single JAR）および ADR-0010（Google OAuth2 認�
    - 既存の自己完結型 [`Dockerfile`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/Dockerfile) はローカル開発環境用（`docker-compose.yml`）として一切変更せず維持し、開発者体験（DX）を保護。
 3. **Watchtower による高セキュリティ Pull 型デプロイ**:
    - OCI サーバー側で **Watchtower**（コンテナ自動更新エージェント）を常駐運用。
+   - アーカイブ済みの旧 `containrrr/watchtower`（Docker API v1.25固定で拒絶される）を排除し、Docker Engine v27+/v29+（API v1.40+）にネイティブ対応し ARM64 を完全サポートするアクティブ保守フォーク **`nickfedor/watchtower`** を採用。
    - OCI 側から GHCR へ外向き（Outbound HTTPS: 443）の通信のみで新しいイメージを検知・取得・再起動。
    - **OCI 側の SSH ポート（22）をインターネットに一切公開する必要がなくなり、最高強度の境界防御を維持**。
 4. **データベース巻き込み再起動の物理防止**:
