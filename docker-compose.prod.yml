@@ -71,7 +71,7 @@ services:
     image: nickfedor/watchtower:latest
     container_name: myhomestock-watchtower
     restart: unless-stopped
-    command: --interval 300 --label-enable --cleanup --include-restarting
+    command: --interval 60 --label-enable --cleanup --include-restarting
     environment:
       DOCKER_API_VERSION: "1.44"
       REPO_USER: ${GHCR_USER:-}
