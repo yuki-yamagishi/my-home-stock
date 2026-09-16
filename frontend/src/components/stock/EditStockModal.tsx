@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Edit3 } from 'lucide-react';
+import { X, Calendar, Edit3, Gauge, Hash } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { STOCK_CATEGORIES, normalizeCategory } from '../../constants/categories';
-import type { StockItem, StockItemInput } from '../../api/schema';
+import {
+  REMAINING_LEVEL_ORDER,
+  REMAINING_LEVEL_CONFIGS,
+  remainingLevelToQuantity,
+} from '../../core/stockStatus';
+import type { StockItem, StockItemInput, StockType, RemainingLevel } from '../../api/schema';
 
 interface EditStockModalProps {
   isOpen: boolean;
@@ -22,6 +27,8 @@ export function EditStockModal({
 }: EditStockModalProps) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState<string>('食品');
+  const [stockType, setStockType] = useState<StockType>('QUANTITY');
+  const [remainingLevel, setRemainingLevel] = useState<RemainingLevel>('FULL');
   const [quantity, setQuantity] = useState(0);
   const [unit, setUnit] = useState('個');
   const [minThreshold, setMinThreshold] = useState(1);
@@ -32,8 +39,10 @@ export function EditStockModal({
     if (item && isOpen) {
       setName(item.name);
       setCategory(normalizeCategory(item.category));
+      setStockType(item.stockType || 'QUANTITY');
+      setRemainingLevel(item.remainingLevel || 'FULL');
       setQuantity(item.quantity);
-      setUnit(item.unit || '個');
+      setUnit(item.unit || (item.stockType === 'REMAINING_LEVEL' ? '袋' : '個'));
       setMinThreshold(item.minThreshold);
       setExpiryDate(item.expiryDate || '');
       setMemo(item.memo || '');
@@ -65,9 +74,14 @@ export function EditStockModal({
     onSave(item.id, {
       name: name.trim(),
       category,
-      quantity: Math.max(0, quantity),
-      unit: unit.trim() || '個',
-      minThreshold: Math.max(0, minThreshold),
+      stockType,
+      remainingLevel: stockType === 'REMAINING_LEVEL' ? remainingLevel : undefined,
+      quantity:
+        stockType === 'REMAINING_LEVEL'
+          ? remainingLevelToQuantity(remainingLevel)
+          : Math.max(0, quantity),
+      unit: unit.trim() || (stockType === 'REMAINING_LEVEL' ? '袋' : '個'),
+      minThreshold: stockType === 'REMAINING_LEVEL' ? 1 : Math.max(0, minThreshold),
       expiryDate: expiryDate.trim() ? expiryDate.trim() : undefined,
       memo: memo.trim() || undefined,
       version: item.version, // 楽観的排他制御
@@ -101,8 +115,12 @@ export function EditStockModal({
               <Edit3 className="h-5 w-5" />
             </div>
             <div>
-              <h2 id="edit-stock-title" className="text-base font-bold text-slate-800">在庫アイテムの編集</h2>
-              <p className="text-xs text-slate-500">詳細情報や補充基準、期限を更新します</p>
+              <h2 id="edit-stock-title" className="text-base font-bold text-slate-800">
+                在庫アイテムの編集
+              </h2>
+              <p className="text-xs text-slate-500">
+                詳細情報や管理タイプ、残量ステータスを更新します
+              </p>
             </div>
           </div>
           <button
@@ -131,7 +149,7 @@ export function EditStockModal({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例: 牛乳, トイレットペーパー"
+              placeholder="例: 牛乳, マヨネーズ, 洗剤"
               required
               autoFocus
             />
@@ -158,41 +176,140 @@ export function EditStockModal({
             </select>
           </div>
 
-          {/* 数量 & 単位 & 補充閾値 */}
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                現在数量
-              </label>
-              <Input
-                type="number"
-                min="0"
-                value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                単位
-              </label>
-              <Input
-                placeholder="個, 本, 袋"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                最小閾値 (補充基準)
-              </label>
-              <Input
-                type="number"
-                min="0"
-                value={minThreshold}
-                onChange={(e) => setMinThreshold(parseInt(e.target.value) || 0)}
-              />
+          {/* 管理方法の選択 (個数管理 vs 残量段階管理) */}
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+              管理方法 <span className="text-rose-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setStockType('QUANTITY');
+                  if (unit === '袋' && quantity === 0) {
+                    setQuantity(1);
+                  }
+                }}
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                  stockType === 'QUANTITY'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Hash className="h-4 w-4 text-emerald-600" />
+                個数で管理 (1個, 2本...)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStockType('REMAINING_LEVEL');
+                  if (unit === '個') {
+                    setUnit('袋');
+                  }
+                }}
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                  stockType === 'REMAINING_LEVEL'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Gauge className="h-4 w-4 text-blue-600" />
+                残量で管理 (4段階)
+              </button>
             </div>
           </div>
+
+          {/* 管理方法に応じた入力欄の切り替え */}
+          {stockType === 'QUANTITY' ? (
+            /* 個数管理用入力欄 */
+            <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                  現在数量
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                  単位
+                </label>
+                <Input
+                  placeholder="個, 本, パック"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                  最小閾値 (補充基準)
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={minThreshold}
+                  onChange={(e) => setMinThreshold(parseInt(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+          ) : (
+            /* 残量段階管理用入力欄 */
+            <div className="space-y-3 p-3 bg-blue-50/40 rounded-xl border border-blue-100">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
+                    現在の残量ステータス (4段階)
+                  </label>
+                  <span className="text-[11px] text-slate-500">
+                    ※「怪しい」「すっからかん」で買い物リスト入り
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {REMAINING_LEVEL_ORDER.slice().reverse().map((lvl) => {
+                    const cfg = REMAINING_LEVEL_CONFIGS[lvl];
+                    const isSelected = remainingLevel === lvl;
+                    return (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => setRemainingLevel(lvl)}
+                        className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all ${
+                          isSelected
+                            ? `${cfg.colorClasses.activeButton} border-transparent`
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className="text-sm font-bold">{cfg.label}</span>
+                        <span
+                          className={`text-[10px] mt-0.5 ${
+                            isSelected ? 'text-white/90' : 'text-slate-400'
+                          }`}
+                        >
+                          {cfg.subtext}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                  容器・単位の名称
+                </label>
+                <Input
+                  placeholder="袋, 本, ボトル, パック, 箱"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  className="bg-white max-w-xs"
+                />
+              </div>
+            </div>
+          )}
 
           {/* 賞味・消費期限 */}
           <div>

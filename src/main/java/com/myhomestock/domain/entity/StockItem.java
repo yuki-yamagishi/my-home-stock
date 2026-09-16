@@ -38,6 +38,14 @@ public class StockItem {
     @Column(columnDefinition = "TEXT")
     private String memo;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "stock_type", nullable = false, length = 20)
+    private StockType stockType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "remaining_level", length = 20)
+    private RemainingLevel remainingLevel;
+
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
 
@@ -59,8 +67,8 @@ public class StockItem {
     }
 
     public StockItem(Long id, String householdId, String name, String category, Integer quantity, String unit,
-                     Integer minThreshold, String memo, LocalDate expiryDate, Long version,
-                     OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+                     Integer minThreshold, String memo, LocalDate expiryDate, StockType stockType,
+                     RemainingLevel remainingLevel, Long version, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.id = id;
         this.householdId = householdId;
         this.name = name;
@@ -70,6 +78,8 @@ public class StockItem {
         this.minThreshold = minThreshold;
         this.memo = memo;
         this.expiryDate = expiryDate;
+        this.stockType = stockType;
+        this.remainingLevel = remainingLevel;
         this.version = version;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -92,11 +102,26 @@ public class StockItem {
         if (this.unit == null) {
             this.unit = "個";
         }
-        if (this.quantity == null) {
-            this.quantity = 1;
+        if (this.stockType == null) {
+            this.stockType = StockType.QUANTITY;
         }
-        if (this.minThreshold == null) {
-            this.minThreshold = 1;
+        if (this.stockType == StockType.REMAINING_LEVEL) {
+            if (this.remainingLevel == null) {
+                this.remainingLevel = RemainingLevel.FULL;
+            }
+            if (this.quantity == null) {
+                this.quantity = this.remainingLevel.getLevel();
+            }
+            if (this.minThreshold == null) {
+                this.minThreshold = 1;
+            }
+        } else {
+            if (this.quantity == null) {
+                this.quantity = 1;
+            }
+            if (this.minThreshold == null) {
+                this.minThreshold = 1;
+            }
         }
     }
 
@@ -136,6 +161,12 @@ public class StockItem {
     public LocalDate getExpiryDate() { return expiryDate; }
     public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
 
+    public StockType getStockType() { return stockType; }
+    public void setStockType(StockType stockType) { this.stockType = stockType; }
+
+    public RemainingLevel getRemainingLevel() { return remainingLevel; }
+    public void setRemainingLevel(RemainingLevel remainingLevel) { this.remainingLevel = remainingLevel; }
+
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 
@@ -155,6 +186,8 @@ public class StockItem {
         private Integer minThreshold;
         private String memo;
         private LocalDate expiryDate;
+        private StockType stockType;
+        private RemainingLevel remainingLevel;
         private Long version;
         private OffsetDateTime createdAt;
         private OffsetDateTime updatedAt;
@@ -168,12 +201,14 @@ public class StockItem {
         public Builder minThreshold(Integer minThreshold) { this.minThreshold = minThreshold; return this; }
         public Builder memo(String memo) { this.memo = memo; return this; }
         public Builder expiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; return this; }
+        public Builder stockType(StockType stockType) { this.stockType = stockType; return this; }
+        public Builder remainingLevel(RemainingLevel remainingLevel) { this.remainingLevel = remainingLevel; return this; }
         public Builder version(Long version) { this.version = version; return this; }
         public Builder createdAt(OffsetDateTime createdAt) { this.createdAt = createdAt; return this; }
         public Builder updatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; return this; }
 
         public StockItem build() {
-            return new StockItem(id, householdId, name, category, quantity, unit, minThreshold, memo, expiryDate, version, createdAt, updatedAt);
+            return new StockItem(id, householdId, name, category, quantity, unit, minThreshold, memo, expiryDate, stockType, remainingLevel, version, createdAt, updatedAt);
         }
     }
 }

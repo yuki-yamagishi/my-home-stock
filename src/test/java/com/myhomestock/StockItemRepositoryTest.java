@@ -104,4 +104,46 @@ public class StockItemRepositoryTest {
         assertThat(itemsB).extracting(StockItem::getName).contains("牛乳 (家族B)");
         assertThat(itemsB).extracting(StockItem::getName).doesNotContain("牛乳 (家族A)");
     }
+
+    @Test
+    @DisplayName("findShortageItemsByHousehold should return REMAINING_LEVEL items when level is LOW or EMPTY")
+    void testFindShortageItemsRemainingLevel() {
+        StockItem fullItem = StockItem.builder()
+                .householdId("household-1")
+                .name("砂糖")
+                .category("調味料")
+                .stockType(com.myhomestock.domain.entity.StockType.REMAINING_LEVEL)
+                .remainingLevel(com.myhomestock.domain.entity.RemainingLevel.FULL)
+                .build();
+        StockItem plentyItem = StockItem.builder()
+                .householdId("household-1")
+                .name("塩")
+                .category("調味料")
+                .stockType(com.myhomestock.domain.entity.StockType.REMAINING_LEVEL)
+                .remainingLevel(com.myhomestock.domain.entity.RemainingLevel.PLENTY)
+                .build();
+        StockItem lowItem = StockItem.builder()
+                .householdId("household-1")
+                .name("マヨネーズ")
+                .category("調味料")
+                .stockType(com.myhomestock.domain.entity.StockType.REMAINING_LEVEL)
+                .remainingLevel(com.myhomestock.domain.entity.RemainingLevel.LOW)
+                .build();
+        StockItem emptyItem = StockItem.builder()
+                .householdId("household-1")
+                .name("ケチャップ")
+                .category("調味料")
+                .stockType(com.myhomestock.domain.entity.StockType.REMAINING_LEVEL)
+                .remainingLevel(com.myhomestock.domain.entity.RemainingLevel.EMPTY)
+                .build();
+
+        repository.saveAndFlush(fullItem);
+        repository.saveAndFlush(plentyItem);
+        repository.saveAndFlush(lowItem);
+        repository.saveAndFlush(emptyItem);
+
+        List<StockItem> shortages = repository.findShortageItemsByHousehold("household-1");
+        assertThat(shortages).extracting(StockItem::getName).containsExactlyInAnyOrder("マヨネーズ", "ケチャップ");
+        assertThat(shortages).extracting(StockItem::getName).doesNotContain("砂糖", "塩");
+    }
 }

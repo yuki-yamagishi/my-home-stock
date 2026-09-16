@@ -1,7 +1,9 @@
 /**
- * Pure Domain Business Logic: Stock & Expiry Calculation
+ * Pure Domain Business Logic: Stock, Expiry & Remaining Level Calculation
  * Independent of React, DOM, or external APIs (100% unit-testable)
  */
+
+import type { StockType, RemainingLevel } from '../api/schema';
 
 export type ExpiryAlertLevel = 'expired' | 'warning' | 'ok' | 'none';
 
@@ -18,11 +20,116 @@ export interface StockSummary {
   expiredCount: number;
 }
 
+export interface RemainingLevelConfig {
+  level: RemainingLevel;
+  label: string;
+  shortLabel: string;
+  subtext: string;
+  numericValue: number;
+  colorClasses: {
+    badge: string;
+    activeButton: string;
+    dot: string;
+    bar: string;
+  };
+}
+
+export const REMAINING_LEVEL_ORDER: RemainingLevel[] = ['EMPTY', 'LOW', 'PLENTY', 'FULL'];
+
+export const REMAINING_LEVEL_CONFIGS: Record<RemainingLevel, RemainingLevelConfig> = {
+  FULL: {
+    level: 'FULL',
+    label: '十分',
+    shortLabel: '十分',
+    subtext: 'たっぷり (7割以上)',
+    numericValue: 3,
+    colorClasses: {
+      badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      activeButton: 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600 ring-offset-1',
+      dot: 'bg-emerald-500',
+      bar: 'bg-emerald-500',
+    },
+  },
+  PLENTY: {
+    level: 'PLENTY',
+    label: 'まだまだ',
+    shortLabel: 'まだまだ',
+    subtext: '余裕あり (半分程度)',
+    numericValue: 2,
+    colorClasses: {
+      badge: 'bg-blue-100 text-blue-800 border-blue-200',
+      activeButton: 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-600 ring-offset-1',
+      dot: 'bg-blue-500',
+      bar: 'bg-blue-500',
+    },
+  },
+  LOW: {
+    level: 'LOW',
+    label: '怪しい',
+    shortLabel: '怪しい',
+    subtext: '残りわずか (買い足し推奨)',
+    numericValue: 1,
+    colorClasses: {
+      badge: 'bg-amber-100 text-amber-800 border-amber-200',
+      activeButton: 'bg-amber-600 text-white shadow-sm ring-2 ring-amber-600 ring-offset-1',
+      dot: 'bg-amber-500',
+      bar: 'bg-amber-500',
+    },
+  },
+  EMPTY: {
+    level: 'EMPTY',
+    label: 'すっからかん',
+    shortLabel: 'すっからかん',
+    subtext: 'なし (要購入)',
+    numericValue: 0,
+    colorClasses: {
+      badge: 'bg-rose-100 text-rose-800 border-rose-200',
+      activeButton: 'bg-rose-600 text-white shadow-sm ring-2 ring-rose-600 ring-offset-1',
+      dot: 'bg-rose-500',
+      bar: 'bg-rose-500',
+    },
+  },
+};
+
 /**
- * Determines if an item is short on stock (needs to be added to shopping list)
+ * Determines if an item is short on stock (needs to be added to shopping list).
+ * For REMAINING_LEVEL, LOW or EMPTY triggers shortage.
+ * For QUANTITY, quantity <= minThreshold triggers shortage.
  */
-export function isShortage(quantity: number, minThreshold: number): boolean {
+export function isShortage(
+  quantity: number,
+  minThreshold: number,
+  stockType: StockType = 'QUANTITY',
+  remainingLevel?: RemainingLevel | null
+): boolean {
+  if (stockType === 'REMAINING_LEVEL') {
+    return remainingLevel === 'LOW' || remainingLevel === 'EMPTY';
+  }
   return quantity <= minThreshold;
+}
+
+/**
+ * Maps RemainingLevel to numeric quantity (0 to 3)
+ */
+export function remainingLevelToQuantity(level: RemainingLevel | null | undefined): number {
+  if (!level) return 3;
+  return REMAINING_LEVEL_CONFIGS[level]?.numericValue ?? 3;
+}
+
+/**
+ * Calculates next decreased remaining level (FULL -> PLENTY -> LOW -> EMPTY)
+ */
+export function getNextDecreasedLevel(level: RemainingLevel | null | undefined): RemainingLevel {
+  switch (level) {
+    case 'FULL':
+      return 'PLENTY';
+    case 'PLENTY':
+      return 'LOW';
+    case 'LOW':
+    case 'EMPTY':
+    default:
+      return 'EMPTY';
+  }
 }
 
 /**
@@ -64,7 +171,13 @@ export function getExpiryStatus(
  * Computes aggregated dashboard metrics for all stock items
  */
 export function calculateStockSummary(
-  items: Array<{ quantity: number; minThreshold: number; expiryDate?: string | null }>,
+  items: Array<{
+    quantity: number;
+    minThreshold: number;
+    stockType?: StockType | null;
+    remainingLevel?: RemainingLevel | null;
+    expiryDate?: string | null;
+  }>,
   referenceDate: Date = new Date()
 ): StockSummary {
   let shortageCount = 0;
@@ -72,7 +185,7 @@ export function calculateStockSummary(
   let expiredCount = 0;
 
   for (const item of items) {
-    if (isShortage(item.quantity, item.minThreshold)) {
+    if (isShortage(item.quantity, item.minThreshold, item.stockType || 'QUANTITY', item.remainingLevel)) {
       shortageCount++;
     }
 

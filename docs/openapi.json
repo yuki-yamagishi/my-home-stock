@@ -378,6 +378,18 @@
         },
         "required": ["status", "service", "timestamp"]
       },
+      "StockType": {
+        "type": "string",
+        "enum": ["QUANTITY", "REMAINING_LEVEL"],
+        "description": "在庫管理タイプ (QUANTITY: 個数管理, REMAINING_LEVEL: 4段階残量管理)",
+        "example": "QUANTITY"
+      },
+      "RemainingLevel": {
+        "type": "string",
+        "enum": ["EMPTY", "LOW", "PLENTY", "FULL"],
+        "description": "4段階残量レベル (EMPTY: すっからかん, LOW: 怪しい, PLENTY: まだまだ, FULL: 十分)",
+        "example": "FULL"
+      },
       "StockItemRequestDto": {
         "type": "object",
         "properties": {
@@ -411,6 +423,12 @@
             "type": "string",
             "format": "date",
             "example": "2026-09-30"
+          },
+          "stockType": {
+            "$ref": "#/components/schemas/StockType"
+          },
+          "remainingLevel": {
+            "$ref": "#/components/schemas/RemainingLevel"
           },
           "version": {
             "type": "integer",
@@ -463,6 +481,12 @@
             "type": "string",
             "format": "date"
           },
+          "stockType": {
+            "$ref": "#/components/schemas/StockType"
+          },
+          "remainingLevel": {
+            "$ref": "#/components/schemas/RemainingLevel"
+          },
           "version": {
             "type": "integer",
             "format": "int64",
@@ -477,7 +501,7 @@
             "format": "date-time"
           }
         },
-        "required": ["id", "name", "category", "quantity", "unit", "minThreshold", "version", "createdAt", "updatedAt"]
+        "required": ["id", "name", "category", "quantity", "unit", "minThreshold", "stockType", "version", "createdAt", "updatedAt"]
       },
       "AuthUserResponseDto": {
         "type": "object",

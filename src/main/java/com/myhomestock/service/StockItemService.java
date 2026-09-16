@@ -82,19 +82,40 @@ public class StockItemService {
     public StockItemResponseDto createStockItem(StockItemRequestDto dto, String householdId) {
         String hid = resolveHouseholdId(householdId);
 
+        com.myhomestock.domain.entity.StockType stockType = dto.getStockType() != null
+                ? dto.getStockType()
+                : com.myhomestock.domain.entity.StockType.QUANTITY;
+        com.myhomestock.domain.entity.RemainingLevel remainingLevel = dto.getRemainingLevel();
+
+        if (stockType == com.myhomestock.domain.entity.StockType.REMAINING_LEVEL && remainingLevel == null) {
+            remainingLevel = com.myhomestock.domain.entity.RemainingLevel.FULL;
+        }
+
+        Integer quantity = dto.getQuantity();
+        if (stockType == com.myhomestock.domain.entity.StockType.REMAINING_LEVEL && remainingLevel != null) {
+            quantity = remainingLevel.getLevel();
+        } else if (quantity == null) {
+            quantity = 1;
+        }
+
+        Integer minThreshold = dto.getMinThreshold() != null ? dto.getMinThreshold() : 1;
+
         StockItem entity = StockItem.builder()
                 .householdId(hid)
                 .name(dto.getName())
                 .category(dto.getCategory() != null ? dto.getCategory() : "未分類")
-                .quantity(dto.getQuantity())
+                .quantity(quantity)
                 .unit(dto.getUnit() != null ? dto.getUnit() : "個")
-                .minThreshold(dto.getMinThreshold() != null ? dto.getMinThreshold() : 1)
+                .minThreshold(minThreshold)
                 .memo(dto.getMemo())
                 .expiryDate(dto.getExpiryDate())
+                .stockType(stockType)
+                .remainingLevel(remainingLevel)
                 .build();
 
         StockItem saved = repository.save(entity);
-        log.info("StockItem created: id={}, household={}, name={}", saved.getId(), saved.getHouseholdId(), saved.getName());
+        log.info("StockItem created: id={}, household={}, name={}, stockType={}, remainingLevel={}",
+                saved.getId(), saved.getHouseholdId(), saved.getName(), saved.getStockType(), saved.getRemainingLevel());
         return StockItemResponseDto.fromEntity(saved);
     }
 
@@ -118,14 +139,33 @@ public class StockItemService {
 
         item.setName(dto.getName());
         if (dto.getCategory() != null) item.setCategory(dto.getCategory());
-        if (dto.getQuantity() != null) item.setQuantity(dto.getQuantity());
         if (dto.getUnit() != null) item.setUnit(dto.getUnit());
         if (dto.getMinThreshold() != null) item.setMinThreshold(dto.getMinThreshold());
         item.setMemo(dto.getMemo());
         item.setExpiryDate(dto.getExpiryDate());
 
+        if (dto.getStockType() != null) {
+            item.setStockType(dto.getStockType());
+        }
+
+        if (item.getStockType() == com.myhomestock.domain.entity.StockType.REMAINING_LEVEL) {
+            if (dto.getRemainingLevel() != null) {
+                item.setRemainingLevel(dto.getRemainingLevel());
+                item.setQuantity(dto.getRemainingLevel().getLevel());
+            } else if (item.getRemainingLevel() == null) {
+                item.setRemainingLevel(com.myhomestock.domain.entity.RemainingLevel.FULL);
+                item.setQuantity(com.myhomestock.domain.entity.RemainingLevel.FULL.getLevel());
+            }
+        } else {
+            if (dto.getQuantity() != null) {
+                item.setQuantity(dto.getQuantity());
+            }
+            item.setRemainingLevel(null);
+        }
+
         StockItem updated = repository.save(item);
-        log.info("StockItem updated: id={}, household={}, newVersion={}", updated.getId(), updated.getHouseholdId(), updated.getVersion());
+        log.info("StockItem updated: id={}, household={}, newVersion={}, stockType={}, remainingLevel={}",
+                updated.getId(), updated.getHouseholdId(), updated.getVersion(), updated.getStockType(), updated.getRemainingLevel());
         return StockItemResponseDto.fromEntity(updated);
     }
 
@@ -140,11 +180,24 @@ public class StockItemService {
         StockItem item = repository.findByIdAndHouseholdId(id, hid)
                 .orElseThrow(() -> new EntityNotFoundException("在庫アイテムが見つかりません: ID " + id + ", 世帯 " + hid));
 
-        int newQuantity = Math.max(0, item.getQuantity() - amount);
-        item.setQuantity(newQuantity);
-        StockItem updated = repository.save(item);
-        log.info("StockItem consumed: id={}, household={}, amount={}, remainingQuantity={}", id, hid, amount, newQuantity);
-        return StockItemResponseDto.fromEntity(updated);
+        if (item.getStockType() == com.myhomestock.domain.entity.StockType.REMAINING_LEVEL) {
+            com.myhomestock.domain.entity.RemainingLevel current = item.getRemainingLevel() != null
+                    ? item.getRemainingLevel()
+                    : com.myhomestock.domain.entity.RemainingLevel.FULL;
+            com.myhomestock.domain.entity.RemainingLevel next = current.decrease();
+            item.setRemainingLevel(next);
+            item.setQuantity(next.getLevel());
+            StockItem updated = repository.save(item);
+            log.info("StockItem consumed (level): id={}, household={}, from={}, to={}, remainingQuantity={}",
+                    id, hid, current, next, updated.getQuantity());
+            return StockItemResponseDto.fromEntity(updated);
+        } else {
+            int newQuantity = Math.max(0, item.getQuantity() - amount);
+            item.setQuantity(newQuantity);
+            StockItem updated = repository.save(item);
+            log.info("StockItem consumed: id={}, household={}, amount={}, remainingQuantity={}", id, hid, amount, newQuantity);
+            return StockItemResponseDto.fromEntity(updated);
+        }
     }
 
     @Transactional
