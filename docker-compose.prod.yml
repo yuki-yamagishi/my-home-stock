@@ -73,6 +73,7 @@ services:
     restart: unless-stopped
     command: --interval 300 --label-enable --cleanup --include-restarting
     environment:
+      DOCKER_API_VERSION: "1.44"
       REPO_USER: ${GHCR_USER:-}
       REPO_PASS: ${GHCR_PAT:-}
     volumes:
