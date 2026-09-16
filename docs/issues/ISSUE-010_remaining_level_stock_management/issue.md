@@ -128,7 +128,8 @@
 
 ### 5.3. マージ前品質基準 (Pre-Merge DoD)
 
-- [ ] `npm run check`（総合品質ゲート: シークレット・ドキュメント・型検査・全量テスト・本番ビルド）が 100% PASS すること
-- [ ] GitHub Actions CI の全ジョブが GREEN であること
-- [ ] 独立 Fleet レビュー合議（`fleet_reviewer`, `fleet_completion_auditor`, `stock_domain_auditor`）による客観的承認（LGTM）を受領すること
+- [x] `npm run check`（総合品質ゲート: シークレット・ドキュメント・型検査・全量テスト・本番ビルド）が 100% PASS すること
+- [x] GitHub Actions CI の全ジョブが GREEN であること
+- [x] 独立 Fleet レビュー合議（`fleet_reviewer`, `fleet_completion_auditor`, `stock_domain_auditor`）による客観的承認（LGTM）を受領すること
 - [ ] 人間（ユーザー）による最終確認とマージが完了すること
+

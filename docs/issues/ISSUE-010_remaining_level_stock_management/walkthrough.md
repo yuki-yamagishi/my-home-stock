@@ -61,6 +61,12 @@
 
 ## 4. レビュー指摘・対応履歴
 
-| レビュアー | 指摘内容 | 重要度 | 対応内容 |
+| レビュアー | 指摘・提案内容 | 重要度 | 判定 / 対応内容 |
 | :--- | :--- | :---: | :--- |
-| (初回レビュー待ち) | - | - | - |
+| **fleet_reviewer** | コード品質・型安全性・セキュリティ・アーキテクチャ原則の総合検証 | - | 🟢 **LGTM** (ブロッカー 0件) |
+| fleet_reviewer | `handleAddOne` のデフォルト値をより安全に `item.stockType \|\| 'QUANTITY'` にすると尚良い | `[imo]` | 確認済。現状のカード分岐構造（`item.stockType !== 'REMAINING_LEVEL'`）で安全に担保されているため即時問題なし。将来の改善候補として記録。 |
+| fleet_reviewer | DTOバリデーションの `@NotNull` が `remainingLevel` に対して厳しすぎる可能性 | `[nits]` | 確認済。現在は二重防壁（内部数量自動同期）を採用しているため `@NotNull` で整合性が保たれている。将来のAPI分離時に再検討。 |
+| **stock_domain_auditor** | MyHomeStock 4大アーキテクチャ原則（JPA楽観排他・世帯分離・純粋コアロジック・OpenAPI型同期）の専門監査 | - | 🟢 **LGTM** (4大原則すべて PASS) |
+| stock_domain_auditor | `useConsumeStock` フックにも `useUpdateStock` 同様に 409 Conflict 時の自動再取得ハンドラを追加するとより盤石 | `[imo]` | 確認済。次回以降の UX 強化タスクにて反映を検討。 |
+| **fleet_completion_auditor** | 課題背景（Why）・排除リスク・受け入れ基準（シナリオ1〜6）・DoD の批判的完了性監査 | - | 🟢 **LGTM** (全シナリオ反証トレース PASS、やり残しなし) |
+
