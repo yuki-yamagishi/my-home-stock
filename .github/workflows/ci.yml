@@ -11,10 +11,10 @@ jobs:
     name: Security & Document Integrity
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Run MyHomeStock Quality Gate Guards
@@ -24,7 +24,7 @@ jobs:
     name: Backend Build & Tests (Spring Boot 4 / Java 21)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Set up JDK 21 (Eclipse Temurin)
@@ -42,10 +42,10 @@ jobs:
     name: Frontend Quality (TypeScript, Tests, PWA Build)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: 'npm'
