@@ -3,40 +3,59 @@
 - **対象Issue**: [ISSUE-010] 残量段階管理機能（4段階ステータス表示・消耗品管理）の実装
 - **作成日**: 2026-09-16
 - **担当者**: AIエージェント
-- **ステータス**: 🟡 実装中 (`status: in-progress`)
+- **ステータス**: 🟢 実装完了・品質ゲート通過 (`status: completed`)
 
 ---
 
 ## 1. 概要・変更ハイライト
 
-常に1袋しかなく測量できない消耗品（調味料、洗剤等）向けに、4段階の残量レベル（十分・まだまだ・怪しい・すっからかん）で直感的に在庫管理・買い物リスト連携を行う「残量段階管理機能」を実装しました。
+常に1袋・1本しかなく測量できない消耗品（調味料、洗剤、米、シャンプー等）向けに、4段階の残量レベル（十分・まだまだ・怪しい・すっからかん）による直感的な在庫管理、カード上でのワンタップ残量変更、および買い物リスト自動連携を実装しました。
+
+### 🌟 主な実現内容
+1. **ハイブリッドデータモデル**:
+   - `StockType`（`QUANTITY`: 個数管理, `REMAINING_LEVEL`: 4段階残量管理）を導入。
+   - `RemainingLevel`（`FULL`: 十分, `PLENTY`: まだまだ, `LOW`: 怪しい, `EMPTY`: すっからかん）の 4 段階 Enum を定義。
+   - 既存の個数管理アイテムへの後方互換性を 100% 保証。
+2. **直感的な UI/UX**:
+   - **クイック追加フォーム**: 「個数で管理」「残量で管理」をトグル選択可能。残量管理時はタップしやすい4段階残量ボタングループを表示。
+   - **在庫一覧カード**: 残量レベルバッジ・ドット表示、およびカード上で直接ワンタップで残量を切り替えられるクイックボタン（`[すっからかん] [怪しい] [まだまだ] [十分]`）を配備。
+   - **買い物リスト自動連携**: 「怪しい」「すっからかん」になった時点で自動的に買い物リストにリストアップ。「補充完了 (十分)」ボタンを配備し、ワンタップで解消可能。
+   - **詳細編集モーダル**: 管理方法の切り替えや4段階ステータス変更に対応。
+3. **多重整合性と安全設計**:
+   - 残量管理時でも内部的に `quantity`（0〜3）と同期させ、既存クエリや外部連携の安全性を担保。
+   - 楽観的排他制御（`version`）および世帯マルチテナント（`household_id`）の厳格な伝播。
+   - OpenAPI 3.0 仕様書と TypeScript Strict 型定義の完全自動同期。
 
 ---
 
 ## 2. 変更詳細
 
 ### 2.1. データベース & バックエンド
-- Flyway マイグレーション `V3__add_stock_type_and_remaining_level.sql`
-- `StockType`, `RemainingLevel` Enum
-- `StockItem`, `StockItemRequestDto`, `StockItemResponseDto`
-- `StockItemRepository` 不足判定クエリ
-- `StockItemService` 消費・更新ロジック
+- `V3__add_stock_type_and_remaining_level.sql`: `stock_type` と `remaining_level` カラムおよびインデックスの追加。
+- `StockType.java` & `RemainingLevel.java`: ドメイン Enum の新設および `decrease()` メソッドの提供。
+- `StockItem.java`: エンティティフィールド追加、`@PrePersist` デフォルト補正ロジック。
+- `StockItemRequestDto.java` & `StockItemResponseDto.java`: DTO フィールド・Swagger スキーマ追加。
+- `StockItemRepository.java`: `findShortageItemsByHousehold` JPQL への残量不足条件（`LOW`, `EMPTY`）の統合。
+- `StockItemService.java`: 残量管理アイテムの作成、更新、段階的消費（decrease）処理の実装。
+- `StockItemRepositoryTest.java` & `StockItemServiceTest.java`: 単体・統合テストの追加。
 
 ### 2.2. フロントエンド & OpenAPI
-- `docs/openapi.json` & `frontend/src/api/schema.d.ts`
-- `frontend/src/core/stockStatus.ts` & 単体テスト
-- `frontend/src/components/stock/EditStockModal.tsx`
-- `frontend/src/App.tsx`
+- `docs/openapi.json` & `frontend/src/api/schema.d.ts`: OpenAPI 仕様書定義および TypeScript 型定義の同期。
+- `frontend/src/core/stockStatus.ts`: 純粋ビジネスロジック（`isShortage`、4段階残量レベル設定・色・ラベル定義）の実装。
+- `frontend/tests/core/stockStatus.test.ts`: 純粋ドメインロジックの全件単体テスト（100% パス）。
+- `frontend/src/components/stock/EditStockModal.tsx`: 管理方法切り替え、4段階残量セレクターUIの実装。
+- `frontend/src/App.tsx`: クイック追加フォーム、一覧カード（ワンタップ残量ボタン）、買い物リスト（補充完了ボタン）の統合。
 
 ---
 
 ## 3. 検証結果
 
-- [ ] バックエンド JUnit 5 テスト
-- [ ] フロントエンド Vitest テスト
-- [ ] `npm run check:fast` (TypeScript Strict)
-- [ ] `npm run check:docs` (ドキュメント整合性・OpenAPI同期)
-- [ ] `npm run check` (ワンショット品質ゲート)
+### 3.1. 自動テスト結果
+- **バックエンド JUnit 5 テスト**: 29 件全件 PASS (`.\mvnw.cmd test`)
+- **フロントエンド Vitest テスト**: 17 件全件 PASS (`npm run test:related`)
+- **型検査**: エラー 0 件 PASS (`npm run check:fast`)
+- **ドキュメント・OpenAPI 同期ガード**: PASS (`npm run check:docs`)
+- **Outer Loop 統合品質ゲート**: 全項目 PASS (`npm run check`)
 
 ---
 

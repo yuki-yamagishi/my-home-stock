@@ -118,13 +118,13 @@
 
 ### 5.2. PR作成前プロセス完了基準 (Pre-PR Process DoD)
 
-- [ ] Flyway V3 マイグレーションスクリプトが作成されていること
-- [ ] バックエンド Entity, DTO, Repository, Service が実装され、単体テストが全件 PASS すること
-- [ ] OpenAPI 仕様書と `schema.d.ts` が 100% 同期されていること
-- [ ] フロントエンドの純粋ドメインロジック（`stockStatus.ts`）の単体テストが全件 PASS すること
-- [ ] `npm run check:fast`（型検査）がエラーゼロでパスすること
-- [ ] `npm run test:related`（フロントエンドテスト）が全件パスすること
-- [ ] `npm run check:docs`（ドキュメント整合性）がパスすること
+- [x] Flyway V3 マイグレーションスクリプトが作成されていること
+- [x] バックエンド Entity, DTO, Repository, Service が実装され、単体テストが全件 PASS すること
+- [x] OpenAPI 仕様書と `schema.d.ts` が 100% 同期されていること
+- [x] フロントエンドの純粋ドメインロジック（`stockStatus.ts`）の単体テストが全件 PASS すること
+- [x] `npm run check:fast`（型検査）がエラーゼロでパスすること
+- [x] `npm run test:related`（フロントエンドテスト）が全件パスすること
+- [x] `npm run check:docs`（ドキュメント整合性）がパスすること
 
 ### 5.3. マージ前品質基準 (Pre-Merge DoD)
 
