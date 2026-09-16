@@ -23,7 +23,8 @@
 | **[ISSUE-007](ISSUE-007_google_oauth2_and_household_authorization/issue.md)** | Google OAuth2 認証とデータベース駆動型世帯管理および完全プライベートアクセスガードの導入 | ✅ `status: closed` | 🟢 `feature` | AIエージェント | 2026-09-14 |
 | **[ISSUE-008](ISSUE-008_stock_detail_edit_and_input_ux_improvement/issue.md)** | 在庫詳細編集モーダル（EditStockModal）の実装と入力UI/UX改善 | ✅ `status: closed` | 🟢 `feature` | AIエージェント | 2026-09-14 |
 | **[ISSUE-009](ISSUE-009_oci_continuous_deployment_pipeline/issue.md)** | OCI Always Free 向け GitHub Actions イミュータブル継続的デプロイ（CD）パイプラインの構築 | ✅ `status: closed` | 🚀 `ci` | AIエージェント | 2026-09-15 |
-| **[ISSUE-010](ISSUE-010_remaining_level_stock_management/issue.md)** | 残量段階管理機能（4段階ステータス表示・消耗品管理）の実装 | 🟣 `status: in-progress` | 🟢 `feature` | AIエージェント | 2026-09-16 |
+| **[ISSUE-010](ISSUE-010_remaining_level_stock_management/issue.md)** | 残量段階管理機能（4段階ステータス表示・消耗品管理）の実装 | ✅ `status: closed` | 🟢 `feature` | AIエージェント | 2026-09-16 |
+| **[ISSUE-011](ISSUE-011_mobile_header_and_quick_add_ux_improvement/issue.md)** | スマートフォン向けUI/UX最適化（ヘッダー見切れ解消・ボトムナビ導入・在庫追加モーダル化） | 🟣 `status: in-progress` | 🟢 `feature` | AIエージェント | 2026-09-16 |
 
 ---
 
