@@ -147,14 +147,20 @@ sequenceDiagram
 
 ---
 
-## 6. インフラストラクチャ & デプロイ設計 (OCI Single JAR)
+## 6. インフラストラクチャ & デプロイ設計 (OCI Single JAR & Immutable CD)
 
 * **ローカル開発**:
   - `docker compose up -d postgres` で PostgreSQL 16 が即座に稼働。
   - バックエンド: `.\mvnw.cmd spring-boot:run` (ポート 8080)
   - フロントエンド: `npm run dev` (ポート 5173 / Vite Proxy)
-* **本番運用 (OCI Consolidated Single JAR)**:
-  - Oracle Cloud Infrastructure (OCI) Always Free (Ampere A1 / 4コア / 24GB メモリ) 上で Multi-stage build Dockerfile によるコンテナ稼働。
-  - Maven ビルド時に `frontend-maven-plugin` が React PWA 静的資産を `target/classes/static/` に内包。
-  - 単一コンテナ・単一ポート（8080）で Web/PWA 静的配信と REST API を同時提供。
-  - CORS の完全撤廃、デプロイ管理の一本化を実現。
+* **イミュータブル CD パイプライン (GitHub Actions & GHCR)**:
+  - `main` ブランチマージ契機で GitHub Actions（Node 24 / Actions v5）が自動起動。
+  - x86_64 ネイティブランナー上で Single JAR（Maven + Vite 内包）を事前生成し、QEMU エミュレーション遅延（15〜20分）を完全排除。
+  - 本番専用の軽量 JRE コンテナ定義 [`Dockerfile.prod`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/Dockerfile.prod) を介して ARM64 コンテナ化し、GitHub Container Registry (GHCR: `ghcr.io/yuki-yamagishi/my-home-stock`) へプッシュ。
+* **本番運用 (OCI Always Free / Pull 型デプロイ)**:
+  - Oracle Cloud Infrastructure (OCI) Always Free (Ampere A1 / 4コア / 24GB メモリ) 上で [`docker-compose.prod.yml`](file:///c:/Users/yukiy/IdeaProjects/MyHomeStock/docker-compose.prod.yml) により稼働。
+  - **Watchtower (`nickfedor/watchtower:latest`)**: Docker API v1.44 ネイティブ対応のコンテナ自動更新エージェントを常駐運用。`--interval 60`（1分間隔）で GHCR の新規イメージを Pull 監視。
+  - **高境界防御**: 外向き（Outbound HTTPS: 443）通信のみで自動更新を検知・再起動するため、OCI インスタンスの SSH ポート（22番）を全世界に公開する必要が一切ない。
+  - **DB 巻き込み再起動の物理防止**: `app` コンテナにのみ `com.centurylinklabs.watchtower.enable: "true"` を付与し、Watchtower 側で `--label-enable` を指定して PostgreSQL の不意な再起動・データ破損を防止。
+  - **Caddy によるリバースプロキシ & 常時 HTTPS**: ポート 80/443 を受領し Let's Encrypt 自動 SSL 発行。内部ポート 8080 の Spring Boot コンテナへ安全にプロキシ（Google OAuth2 / Secure Cookie 完全対応）。
+
