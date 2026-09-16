@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Plus,
   Minus,
@@ -9,21 +9,20 @@ import {
   Layers,
   Search,
   Pencil,
-  X,
-  Gauge,
-  Hash,
   RotateCcw,
 } from 'lucide-react';
 import { Header } from './components/layout/Header';
+import { BottomNav } from './components/layout/BottomNav';
 import { PwaInstallBanner } from './components/layout/PwaInstallBanner';
 import { Button } from './components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
+import { Card, CardContent } from './components/ui/card';
 import { Input } from './components/ui/input';
 import { Badge } from './components/ui/badge';
 import { LoginCard } from './components/auth/LoginCard';
 import { FamilyMembersModal } from './components/household/FamilyMembersModal';
 import { EditStockModal } from './components/stock/EditStockModal';
-import { STOCK_CATEGORIES, DEFAULT_CATEGORY } from './constants/categories';
+import { CreateStockModal } from './components/stock/CreateStockModal';
+import { STOCK_CATEGORIES } from './constants/categories';
 import { useAuth } from './hooks/useAuth';
 import {
   useStockList,
@@ -55,6 +54,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Queries
   const { data: allStocks = [], isLoading: isLoadingStocks } = useStockList();
@@ -66,19 +66,6 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   const consumeMutation = useConsumeStock();
   const updateMutation = useUpdateStock();
   const deleteMutation = useDeleteStock();
-
-  // Form State (Quick Add)
-  const [form, setForm] = useState<StockItemInput>({
-    name: '',
-    category: DEFAULT_CATEGORY,
-    stockType: 'QUANTITY',
-    remainingLevel: 'FULL',
-    quantity: 1,
-    unit: '個',
-    minThreshold: 1,
-    memo: '',
-    expiryDate: '',
-  });
 
   const categories = useMemo(() => {
     const set = new Set<string>(STOCK_CATEGORIES);
@@ -100,36 +87,11 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
     });
   }, [allStocks, searchQuery, selectedCategory]);
 
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim()) return;
-
-    const isLevel = form.stockType === 'REMAINING_LEVEL';
-    const payload: StockItemInput = {
-      ...form,
-      name: form.name.trim(),
-      stockType: form.stockType,
-      remainingLevel: isLevel ? form.remainingLevel || 'FULL' : undefined,
-      quantity: isLevel ? remainingLevelToQuantity(form.remainingLevel) : form.quantity,
-      unit: form.unit?.trim() || (isLevel ? '袋' : '個'),
-      minThreshold: isLevel ? 1 : form.minThreshold,
-      expiryDate: form.expiryDate ? form.expiryDate : undefined,
-      memo: form.memo?.trim() || undefined,
-    };
-
+  const handleCreateSubmit = (payload: StockItemInput, resetForm: () => void) => {
     createMutation.mutate(payload, {
       onSuccess: () => {
-        setForm({
-          name: '',
-          category: form.category || DEFAULT_CATEGORY,
-          stockType: form.stockType, // 選択した管理方法を維持
-          remainingLevel: 'FULL',
-          quantity: 1,
-          unit: form.stockType === 'REMAINING_LEVEL' ? '袋' : '個',
-          minThreshold: 1,
-          memo: '',
-          expiryDate: '',
-        });
+        resetForm();
+        setIsCreateOpen(false);
       },
     });
   };
@@ -192,7 +154,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
         onOpenMembersModal={onOpenMembersModal}
       />
 
-      <main className="container mx-auto max-w-5xl flex-1 px-4 py-6 space-y-6">
+      <main className="container mx-auto max-w-5xl flex-1 px-4 py-6 pb-28 sm:pb-8 space-y-6">
         {/* Metric Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <Card>
@@ -250,252 +212,6 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
           </Card>
         </div>
 
-        {/* Quick Add Form */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Plus className="h-5 w-5 text-emerald-600" />
-                在庫クイック追加
-              </CardTitle>
-
-              {/* 管理方法トグル */}
-              <div className="inline-flex rounded-lg bg-slate-100 p-1 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      stockType: 'QUANTITY',
-                      unit: form.unit === '袋' ? '個' : form.unit,
-                    })
-                  }
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
-                    form.stockType !== 'REMAINING_LEVEL'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  <Hash className="h-3.5 w-3.5 text-emerald-600" />
-                  個数で管理
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      stockType: 'REMAINING_LEVEL',
-                      unit: form.unit === '個' ? '袋' : form.unit,
-                    })
-                  }
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
-                    form.stockType === 'REMAINING_LEVEL'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  <Gauge className="h-3.5 w-3.5 text-blue-600" />
-                  残量で管理 (4段階)
-                </button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-slate-600 block mb-1">
-                    品名 <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    placeholder={
-                      form.stockType === 'REMAINING_LEVEL'
-                        ? '例: マヨネーズ, 塩, 洗剤, シャンプー'
-                        : '例: 牛乳, 卵, 缶詰'
-                    }
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">
-                    カテゴリ
-                  </label>
-                  <select
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  >
-                    {STOCK_CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {form.stockType === 'REMAINING_LEVEL' ? (
-                /* 残量管理時: 4段階ボタングループ + 単位入力 */
-                <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <label className="text-xs font-semibold text-slate-700">
-                      残量ステータス (初期残量)
-                    </label>
-                    <span className="text-[11px] text-slate-500">
-                      ※「怪しい」「すっからかん」で自動的に買い物リストに入ります
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {REMAINING_LEVEL_ORDER.slice().reverse().map((lvl) => {
-                      const cfg = REMAINING_LEVEL_CONFIGS[lvl];
-                      const isSelected = form.remainingLevel === lvl;
-                      return (
-                        <button
-                          key={lvl}
-                          type="button"
-                          onClick={() => setForm({ ...form, remainingLevel: lvl })}
-                          className={`flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all ${
-                            isSelected
-                              ? `${cfg.colorClasses.activeButton} border-transparent`
-                              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                          }`}
-                        >
-                          <span className="text-xs font-bold">{cfg.label}</span>
-                          <span
-                            className={`text-[10px] mt-0.5 ${
-                              isSelected ? 'text-white/90' : 'text-slate-400'
-                            }`}
-                          >
-                            {cfg.subtext}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="text-xs font-medium text-slate-600 block mb-1">
-                        単位 / 容器
-                      </label>
-                      <Input
-                        placeholder="袋, 本, ボトル, パック"
-                        value={form.unit}
-                        onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                        className="bg-white"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-medium text-slate-600">
-                          賞味・消費期限 (任意)
-                        </label>
-                        {form.expiryDate && (
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, expiryDate: '' })}
-                            className="text-[11px] font-medium text-rose-600 hover:text-rose-700 flex items-center gap-0.5 hover:underline"
-                          >
-                            <X className="h-3 w-3" />
-                            クリア
-                          </button>
-                        )}
-                      </div>
-                      <Input
-                        type="date"
-                        value={form.expiryDate || ''}
-                        onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                        className="bg-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* 個数管理時: 数量・単位・閾値・期限 */
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-slate-600 block mb-1">
-                      現在数量
-                    </label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={form.quantity}
-                      onChange={(e) =>
-                        setForm({ ...form, quantity: parseInt(e.target.value) || 0 })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-600 block mb-1">
-                      単位
-                    </label>
-                    <Input
-                      placeholder="個, 本, パック"
-                      value={form.unit}
-                      onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-600 block mb-1">
-                      最小閾値 (補充基準)
-                    </label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={form.minThreshold}
-                      onChange={(e) =>
-                        setForm({ ...form, minThreshold: parseInt(e.target.value) || 0 })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-medium text-slate-600">
-                        賞味・消費期限
-                      </label>
-                      {form.expiryDate && (
-                        <button
-                          type="button"
-                          onClick={() => setForm({ ...form, expiryDate: '' })}
-                          className="text-[11px] font-medium text-rose-600 hover:text-rose-700 flex items-center gap-0.5 hover:underline"
-                          title="期限をクリア"
-                          aria-label="期限をクリア"
-                        >
-                          <X className="h-3 w-3" />
-                          クリア
-                        </button>
-                      )}
-                    </div>
-                    <Input
-                      type="date"
-                      value={form.expiryDate || ''}
-                      onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Input
-                  placeholder="メモ (任意: ブランド名、保管場所など)"
-                  value={form.memo}
-                  onChange={(e) => setForm({ ...form, memo: e.target.value })}
-                  className="flex-1"
-                />
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || !form.name.trim()}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
-                >
-                  追加する
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
         {/* Tab 1: Stocks List */}
         {activeTab === 'stocks' && (
           <div className="space-y-4">
@@ -511,21 +227,34 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                 />
               </div>
 
-              {/* Category Filter */}
-              <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
-                      selectedCategory === cat
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {cat === 'all' ? 'すべて' : cat}
-                  </button>
-                ))}
+              {/* Controls (Category filter & Add button) */}
+              <div className="flex items-center gap-2">
+                {/* Category Filter */}
+                <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
+                        selectedCategory === cat
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {cat === 'all' ? 'すべて' : cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 在庫追加ボタン (デスクトップおよびタブ上部用) */}
+                <Button
+                  type="button"
+                  onClick={() => setIsCreateOpen(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 flex items-center gap-1.5 shadow-sm text-xs sm:text-sm px-3 py-1.5 h-9"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>在庫を追加</span>
+                </Button>
               </div>
             </div>
 
@@ -733,11 +462,21 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
         {/* Tab 2: Shopping List */}
         {activeTab === 'shopping' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-700">
-                買い出しが必要なアイテム (不足・残りわずか)
-              </h3>
-              <Badge variant="destructive">{shoppingList.length} 件</Badge>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-700">
+                  買い出しが必要なアイテム (不足・残りわずか)
+                </h3>
+                <Badge variant="destructive">{shoppingList.length} 件</Badge>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setIsCreateOpen(true)}
+                className="hidden sm:flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 shadow-sm text-xs px-3 py-1.5 h-8"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>在庫を追加</span>
+              </Button>
             </div>
 
             {shoppingList.length === 0 ? (
@@ -934,7 +673,34 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
           }}
           isSaving={updateMutation.isPending}
         />
+
+        {/* Create Stock Modal */}
+        <CreateStockModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          onSubmit={handleCreateSubmit}
+          isSubmitting={createMutation.isPending}
+        />
       </main>
+
+      {/* モバイル専用 FAB (フローティングアクションボタン) */}
+      <button
+        type="button"
+        onClick={() => setIsCreateOpen(true)}
+        title="在庫アイテムを追加"
+        aria-label="在庫アイテムを追加"
+        className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-30 sm:hidden flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl shadow-emerald-900/30 hover:bg-emerald-700 active:scale-95 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-300"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
+
+      {/* モバイル専用 ボトムナビゲーションバー */}
+      <BottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        shoppingCount={summary.shortageCount}
+        expiringCount={summary.expiringCount + summary.expiredCount}
+      />
     </div>
   );
 }
