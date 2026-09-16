@@ -18,7 +18,7 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     List<StockItem> findByHouseholdIdAndCategoryOrderByNameAsc(String householdId, String category);
 
-    @Query("SELECT s FROM StockItem s WHERE s.householdId = :householdId AND s.quantity <= s.minThreshold ORDER BY s.category ASC, s.name ASC")
+    @Query("SELECT s FROM StockItem s WHERE s.householdId = :householdId AND ((s.stockType = com.myhomestock.domain.entity.StockType.QUANTITY AND s.quantity <= s.minThreshold) OR (s.stockType = com.myhomestock.domain.entity.StockType.REMAINING_LEVEL AND s.remainingLevel IN (com.myhomestock.domain.entity.RemainingLevel.LOW, com.myhomestock.domain.entity.RemainingLevel.EMPTY))) ORDER BY s.category ASC, s.name ASC")
     List<StockItem> findShortageItemsByHousehold(@Param("householdId") String householdId);
 
     List<StockItem> findByHouseholdIdAndExpiryDateLessThanEqualOrderByExpiryDateAsc(String householdId, LocalDate expiryDate);
@@ -30,7 +30,7 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     List<StockItem> findByCategoryOrderByNameAsc(String category);
 
-    @Query("SELECT s FROM StockItem s WHERE s.quantity <= s.minThreshold ORDER BY s.category ASC, s.name ASC")
+    @Query("SELECT s FROM StockItem s WHERE ((s.stockType = com.myhomestock.domain.entity.StockType.QUANTITY AND s.quantity <= s.minThreshold) OR (s.stockType = com.myhomestock.domain.entity.StockType.REMAINING_LEVEL AND s.remainingLevel IN (com.myhomestock.domain.entity.RemainingLevel.LOW, com.myhomestock.domain.entity.RemainingLevel.EMPTY))) ORDER BY s.category ASC, s.name ASC")
     List<StockItem> findShortageItems();
 
     List<StockItem> findByExpiryDateLessThanEqualOrderByExpiryDateAsc(LocalDate expiryDate);

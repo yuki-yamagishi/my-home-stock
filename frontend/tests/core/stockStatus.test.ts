@@ -1,17 +1,65 @@
 import { describe, it, expect } from 'vitest';
-import { isShortage, getExpiryStatus, calculateStockSummary } from '../../src/core/stockStatus';
+import {
+  isShortage,
+  getExpiryStatus,
+  calculateStockSummary,
+  remainingLevelToQuantity,
+  getNextDecreasedLevel,
+  REMAINING_LEVEL_CONFIGS,
+} from '../../src/core/stockStatus';
 
 describe('stockStatus Core Domain Logic', () => {
   describe('isShortage', () => {
-    it('returns true when quantity is equal to or less than minThreshold', () => {
-      expect(isShortage(0, 1)).toBe(true);
-      expect(isShortage(1, 1)).toBe(true);
-      expect(isShortage(2, 5)).toBe(true);
+    describe('QUANTITY stock type (default)', () => {
+      it('returns true when quantity is equal to or less than minThreshold', () => {
+        expect(isShortage(0, 1)).toBe(true);
+        expect(isShortage(1, 1)).toBe(true);
+        expect(isShortage(2, 5)).toBe(true);
+        expect(isShortage(0, 1, 'QUANTITY')).toBe(true);
+        expect(isShortage(1, 1, 'QUANTITY')).toBe(true);
+      });
+
+      it('returns false when quantity is greater than minThreshold', () => {
+        expect(isShortage(2, 1)).toBe(false);
+        expect(isShortage(5, 2)).toBe(false);
+        expect(isShortage(2, 1, 'QUANTITY')).toBe(false);
+      });
     });
 
-    it('returns false when quantity is greater than minThreshold', () => {
-      expect(isShortage(2, 1)).toBe(false);
-      expect(isShortage(5, 2)).toBe(false);
+    describe('REMAINING_LEVEL stock type (4 levels)', () => {
+      it('returns true when remainingLevel is LOW (怪しい) or EMPTY (すっからかん)', () => {
+        expect(isShortage(1, 1, 'REMAINING_LEVEL', 'LOW')).toBe(true);
+        expect(isShortage(0, 1, 'REMAINING_LEVEL', 'EMPTY')).toBe(true);
+      });
+
+      it('returns false when remainingLevel is FULL (十分) or PLENTY (まだまだ)', () => {
+        expect(isShortage(3, 1, 'REMAINING_LEVEL', 'FULL')).toBe(false);
+        expect(isShortage(2, 1, 'REMAINING_LEVEL', 'PLENTY')).toBe(false);
+      });
+    });
+  });
+
+  describe('remainingLevel helpers', () => {
+    it('correctly maps RemainingLevel to numeric quantity', () => {
+      expect(remainingLevelToQuantity('FULL')).toBe(3);
+      expect(remainingLevelToQuantity('PLENTY')).toBe(2);
+      expect(remainingLevelToQuantity('LOW')).toBe(1);
+      expect(remainingLevelToQuantity('EMPTY')).toBe(0);
+      expect(remainingLevelToQuantity(null)).toBe(3);
+    });
+
+    it('correctly decreases remaining level sequentially', () => {
+      expect(getNextDecreasedLevel('FULL')).toBe('PLENTY');
+      expect(getNextDecreasedLevel('PLENTY')).toBe('LOW');
+      expect(getNextDecreasedLevel('LOW')).toBe('EMPTY');
+      expect(getNextDecreasedLevel('EMPTY')).toBe('EMPTY');
+    });
+
+    it('has all 4 levels properly configured in REMAINING_LEVEL_CONFIGS', () => {
+      expect(REMAINING_LEVEL_CONFIGS.FULL.label).toBe('十分');
+      expect(REMAINING_LEVEL_CONFIGS.PLENTY.label).toBe('まだまだ');
+      expect(REMAINING_LEVEL_CONFIGS.LOW.label).toBe('怪しい');
+      expect(REMAINING_LEVEL_CONFIGS.EMPTY.label).toBe('すっからかん');
     });
   });
 
@@ -49,17 +97,30 @@ describe('stockStatus Core Domain Logic', () => {
   describe('calculateStockSummary', () => {
     const referenceDate = new Date('2026-09-05T00:00:00Z');
 
-    it('correctly aggregates counts', () => {
+    it('correctly aggregates counts with both QUANTITY and REMAINING_LEVEL items', () => {
       const items = [
-        { quantity: 0, minThreshold: 1, expiryDate: '2026-09-01' }, // shortage & expired
-        { quantity: 1, minThreshold: 1, expiryDate: '2026-09-06' }, // shortage & warning
-        { quantity: 5, minThreshold: 2, expiryDate: '2026-09-20' }, // normal & ok
-        { quantity: 3, minThreshold: 1, expiryDate: null },         // normal & none
+        { quantity: 0, minThreshold: 1, expiryDate: '2026-09-01' }, // quantity shortage & expired
+        { quantity: 1, minThreshold: 1, expiryDate: '2026-09-06' }, // quantity shortage & warning
+        { quantity: 5, minThreshold: 2, expiryDate: '2026-09-20' }, // quantity normal & ok
+        {
+          quantity: 1,
+          minThreshold: 1,
+          stockType: 'REMAINING_LEVEL' as const,
+          remainingLevel: 'LOW' as const,
+          expiryDate: null,
+        }, // level shortage (怪しい)
+        {
+          quantity: 3,
+          minThreshold: 1,
+          stockType: 'REMAINING_LEVEL' as const,
+          remainingLevel: 'FULL' as const,
+          expiryDate: null,
+        }, // level normal (十分)
       ];
 
       const summary = calculateStockSummary(items, referenceDate);
-      expect(summary.totalItems).toBe(4);
-      expect(summary.shortageCount).toBe(2);
+      expect(summary.totalItems).toBe(5);
+      expect(summary.shortageCount).toBe(3); // 2 quantity + 1 remaining level (LOW)
       expect(summary.expiredCount).toBe(1);
       expect(summary.expiringCount).toBe(1);
     });

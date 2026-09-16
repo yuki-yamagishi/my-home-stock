@@ -1,6 +1,8 @@
 package com.myhomestock.domain.dto;
 
+import com.myhomestock.domain.entity.RemainingLevel;
 import com.myhomestock.domain.entity.StockItem;
+import com.myhomestock.domain.entity.StockType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
@@ -36,6 +38,12 @@ public class StockItemResponseDto {
     @Schema(description = "賞味・消費期限", example = "2026-09-30")
     private LocalDate expiryDate;
 
+    @Schema(description = "在庫管理タイプ (QUANTITY: 個数管理, REMAINING_LEVEL: 4段階残量管理)", example = "QUANTITY")
+    private StockType stockType;
+
+    @Schema(description = "4段階残量レベル (EMPTY: すっからかん, LOW: 怪しい, PLENTY: まだまだ, FULL: 十分)", example = "FULL")
+    private RemainingLevel remainingLevel;
+
     @Schema(description = "楽観排他制御バージョン番号", example = "0")
     private Long version;
 
@@ -51,6 +59,13 @@ public class StockItemResponseDto {
     public StockItemResponseDto(Long id, String householdId, String name, String category, Integer quantity, String unit,
                                 Integer minThreshold, String memo, LocalDate expiryDate, Long version,
                                 OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this(id, householdId, name, category, quantity, unit, minThreshold, memo, expiryDate, StockType.QUANTITY, null, version, createdAt, updatedAt);
+    }
+
+    public StockItemResponseDto(Long id, String householdId, String name, String category, Integer quantity, String unit,
+                                Integer minThreshold, String memo, LocalDate expiryDate,
+                                StockType stockType, RemainingLevel remainingLevel,
+                                Long version, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.id = id;
         this.householdId = householdId;
         this.name = name;
@@ -60,6 +75,8 @@ public class StockItemResponseDto {
         this.minThreshold = minThreshold;
         this.memo = memo;
         this.expiryDate = expiryDate;
+        this.stockType = stockType;
+        this.remainingLevel = remainingLevel;
         this.version = version;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -80,6 +97,8 @@ public class StockItemResponseDto {
                 .minThreshold(entity.getMinThreshold())
                 .memo(entity.getMemo())
                 .expiryDate(entity.getExpiryDate())
+                .stockType(entity.getStockType())
+                .remainingLevel(entity.getRemainingLevel())
                 .version(entity.getVersion())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -113,6 +132,12 @@ public class StockItemResponseDto {
     public LocalDate getExpiryDate() { return expiryDate; }
     public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
 
+    public StockType getStockType() { return stockType; }
+    public void setStockType(StockType stockType) { this.stockType = stockType; }
+
+    public RemainingLevel getRemainingLevel() { return remainingLevel; }
+    public void setRemainingLevel(RemainingLevel remainingLevel) { this.remainingLevel = remainingLevel; }
+
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 
@@ -132,6 +157,8 @@ public class StockItemResponseDto {
         private Integer minThreshold;
         private String memo;
         private LocalDate expiryDate;
+        private StockType stockType;
+        private RemainingLevel remainingLevel;
         private Long version;
         private OffsetDateTime createdAt;
         private OffsetDateTime updatedAt;
@@ -145,12 +172,14 @@ public class StockItemResponseDto {
         public Builder minThreshold(Integer minThreshold) { this.minThreshold = minThreshold; return this; }
         public Builder memo(String memo) { this.memo = memo; return this; }
         public Builder expiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; return this; }
+        public Builder stockType(StockType stockType) { this.stockType = stockType; return this; }
+        public Builder remainingLevel(RemainingLevel remainingLevel) { this.remainingLevel = remainingLevel; return this; }
         public Builder version(Long version) { this.version = version; return this; }
         public Builder createdAt(OffsetDateTime createdAt) { this.createdAt = createdAt; return this; }
         public Builder updatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; return this; }
 
         public StockItemResponseDto build() {
-            return new StockItemResponseDto(id, householdId, name, category, quantity, unit, minThreshold, memo, expiryDate, version, createdAt, updatedAt);
+            return new StockItemResponseDto(id, householdId, name, category, quantity, unit, minThreshold, memo, expiryDate, stockType, remainingLevel, version, createdAt, updatedAt);
         }
     }
 }

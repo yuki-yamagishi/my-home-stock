@@ -168,6 +168,18 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        /**
+         * @description 在庫管理タイプ (QUANTITY: 個数管理, REMAINING_LEVEL: 4段階残量管理)
+         * @example QUANTITY
+         * @enum {string}
+         */
+        StockType: "QUANTITY" | "REMAINING_LEVEL";
+        /**
+         * @description 4段階残量レベル (EMPTY: すっからかん, LOW: 怪しい, PLENTY: まだまだ, FULL: 十分)
+         * @example FULL
+         * @enum {string}
+         */
+        RemainingLevel: "EMPTY" | "LOW" | "PLENTY" | "FULL";
         StockItemRequestDto: {
             /** @example 牛乳 */
             name: string;
@@ -186,6 +198,8 @@ export interface components {
              * @example 2026-09-30
              */
             expiryDate?: string;
+            stockType?: components["schemas"]["StockType"];
+            remainingLevel?: components["schemas"]["RemainingLevel"];
             /**
              * Format: int64
              * @example 0
@@ -215,6 +229,8 @@ export interface components {
             memo?: string;
             /** Format: date */
             expiryDate?: string;
+            stockType: components["schemas"]["StockType"];
+            remainingLevel?: components["schemas"]["RemainingLevel"];
             /**
              * Format: int64
              * @example 0
@@ -584,6 +600,8 @@ export interface operations {
 
 export type StockItem = components['schemas']['StockItemResponseDto'];
 export type StockItemInput = components['schemas']['StockItemRequestDto'];
+export type StockType = components['schemas']['StockType'];
+export type RemainingLevel = components['schemas']['RemainingLevel'];
 export type HealthResponse = components['schemas']['HealthResponseDto'];
 export type AuthUser = components['schemas']['AuthUserResponseDto'];
 export type HouseholdMember = components['schemas']['HouseholdMemberResponseDto'];

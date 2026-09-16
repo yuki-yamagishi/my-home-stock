@@ -1,5 +1,7 @@
 package com.myhomestock.domain.dto;
 
+import com.myhomestock.domain.entity.RemainingLevel;
+import com.myhomestock.domain.entity.StockType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -40,6 +42,12 @@ public class StockItemRequestDto {
     @Schema(description = "賞味・消費期限", example = "2026-09-30")
     private LocalDate expiryDate;
 
+    @Schema(description = "在庫管理タイプ (QUANTITY: 個数管理, REMAINING_LEVEL: 4段階残量管理)", example = "QUANTITY")
+    private StockType stockType = StockType.QUANTITY;
+
+    @Schema(description = "4段階残量レベル (EMPTY: すっからかん, LOW: 怪しい, PLENTY: まだまだ, FULL: 十分)", example = "FULL")
+    private RemainingLevel remainingLevel;
+
     @Schema(description = "楽観的排他制御用バージョン番号 (更新時は必須)", example = "0")
     private Long version;
 
@@ -54,6 +62,13 @@ public class StockItemRequestDto {
     public StockItemRequestDto(String name, String category, Integer quantity, String unit,
                                Integer minThreshold, String memo, LocalDate expiryDate, Long version,
                                String householdId) {
+        this(name, category, quantity, unit, minThreshold, memo, expiryDate, StockType.QUANTITY, null, version, householdId);
+    }
+
+    public StockItemRequestDto(String name, String category, Integer quantity, String unit,
+                               Integer minThreshold, String memo, LocalDate expiryDate,
+                               StockType stockType, RemainingLevel remainingLevel,
+                               Long version, String householdId) {
         this.name = name;
         this.category = category;
         this.quantity = quantity;
@@ -61,6 +76,8 @@ public class StockItemRequestDto {
         this.minThreshold = minThreshold;
         this.memo = memo;
         this.expiryDate = expiryDate;
+        this.stockType = (stockType != null) ? stockType : StockType.QUANTITY;
+        this.remainingLevel = remainingLevel;
         this.version = version;
         this.householdId = householdId;
     }
@@ -90,6 +107,12 @@ public class StockItemRequestDto {
     public LocalDate getExpiryDate() { return expiryDate; }
     public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
 
+    public StockType getStockType() { return stockType; }
+    public void setStockType(StockType stockType) { this.stockType = stockType; }
+
+    public RemainingLevel getRemainingLevel() { return remainingLevel; }
+    public void setRemainingLevel(RemainingLevel remainingLevel) { this.remainingLevel = remainingLevel; }
+
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 
@@ -104,6 +127,8 @@ public class StockItemRequestDto {
         private Integer minThreshold;
         private String memo;
         private LocalDate expiryDate;
+        private StockType stockType = StockType.QUANTITY;
+        private RemainingLevel remainingLevel;
         private Long version;
         private String householdId;
 
@@ -114,11 +139,13 @@ public class StockItemRequestDto {
         public Builder minThreshold(Integer minThreshold) { this.minThreshold = minThreshold; return this; }
         public Builder memo(String memo) { this.memo = memo; return this; }
         public Builder expiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; return this; }
+        public Builder stockType(StockType stockType) { this.stockType = stockType; return this; }
+        public Builder remainingLevel(RemainingLevel remainingLevel) { this.remainingLevel = remainingLevel; return this; }
         public Builder version(Long version) { this.version = version; return this; }
         public Builder householdId(String householdId) { this.householdId = householdId; return this; }
 
         public StockItemRequestDto build() {
-            return new StockItemRequestDto(name, category, quantity, unit, minThreshold, memo, expiryDate, version, householdId);
+            return new StockItemRequestDto(name, category, quantity, unit, minThreshold, memo, expiryDate, stockType, remainingLevel, version, householdId);
         }
     }
 }

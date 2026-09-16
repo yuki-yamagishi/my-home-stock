@@ -68,6 +68,8 @@ async function syncApi() {
       content += `
 export type StockItem = components['schemas']['StockItemResponseDto'];
 export type StockItemInput = components['schemas']['StockItemRequestDto'];
+export type StockType = components['schemas']['StockType'];
+export type RemainingLevel = components['schemas']['RemainingLevel'];
 export type HealthResponse = components['schemas']['HealthResponseDto'];
 export type AuthUser = components['schemas']['AuthUserResponseDto'];
 export type HouseholdMember = components['schemas']['HouseholdMemberResponseDto'];
