@@ -18,12 +18,12 @@ jobs:
     name: CI Quality Gate Verification
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
 
       # 1. Quality Gate & Document Integrity
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Run Quality Gate Guards
@@ -55,7 +55,7 @@ jobs:
     needs: [ci-verification]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
 
