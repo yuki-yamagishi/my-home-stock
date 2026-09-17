@@ -25,7 +25,8 @@
 | **[ISSUE-009](ISSUE-009_oci_continuous_deployment_pipeline/issue.md)** | OCI Always Free 向け GitHub Actions イミュータブル継続的デプロイ（CD）パイプラインの構築 | ✅ `status: closed` | 🚀 `ci` | AIエージェント | 2026-09-15 |
 | **[ISSUE-010](ISSUE-010_remaining_level_stock_management/issue.md)** | 残量段階管理機能（4段階ステータス表示・消耗品管理）の実装 | ✅ `status: closed` | 🟢 `feature` | AIエージェント | 2026-09-16 |
 | **[ISSUE-011](ISSUE-011_mobile_header_and_quick_add_ux_improvement/issue.md)** | スマートフォン向けUI/UX最適化（ヘッダー見切れ解消・ボトムナビ導入・在庫追加モーダル化） | ✅ `status: closed` | 🟢 `feature` | AIエージェント | 2026-09-16 |
-| **[ISSUE-012](ISSUE-012_shopping_list_category_grouping_and_stock_add_button_cleanup/issue.md)** | 買い物リストのカテゴリ別表示・絞り込み導入および在庫管理画面の重複追加ボタン整理 | 🟣 `status: in-progress` | 🟢 `feature` | AIエージェント | 2026-09-17 |
+| **[ISSUE-012](ISSUE-012_shopping_list_category_grouping_and_stock_add_button_cleanup/issue.md)** | 買い物リストのカテゴリ別表示・絞り込み導入および在庫管理画面の重複追加ボタン整理 | ✅ `status: closed` | 🟢 `feature` | AIエージェント | 2026-09-17 |
+| **[ISSUE-013](ISSUE-013_metric_cards_tab_visibility_optimization/issue.md)** | 買い物・期限タブにおけるメトリックカード非表示化（一覧性・視認性最適化） | 🟣 `status: in-progress` | 🎨 `type: ui/ux` | AIエージェント | 2026-09-17 |
 
 ---
 

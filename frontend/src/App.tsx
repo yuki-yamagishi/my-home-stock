@@ -235,77 +235,78 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
       />
 
       <main className="container mx-auto max-w-5xl flex-1 px-4 py-6 pb-28 sm:pb-8 space-y-6">
-        {/* Metric Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <Card>
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-slate-500">総登録品目</p>
-                <p className="text-2xl font-bold text-slate-900">{summary.totalItems}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-100 text-slate-600">
-                <Layers className="h-5 w-5" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={summary.shortageCount > 0 ? 'border-rose-200 bg-rose-50/50' : ''}
-          >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-rose-600">買い物候補 (不足)</p>
-                <p className="text-2xl font-bold text-rose-700">{summary.shortageCount}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-rose-100 text-rose-600">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={summary.expiringCount > 0 ? 'border-amber-200 bg-amber-50/50' : ''}
-          >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-amber-600">期限間近 (7日以内)</p>
-                <p className="text-2xl font-bold text-amber-700">{summary.expiringCount}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-amber-100 text-amber-600">
-                <Calendar className="h-5 w-5" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={summary.expiredCount > 0 ? 'border-rose-300 bg-rose-100/50' : ''}
-          >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-rose-800">期限超過</p>
-                <p className="text-2xl font-bold text-rose-900">{summary.expiredCount}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-rose-200 text-rose-800">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Tab 1: Stocks List */}
         {activeTab === 'stocks' && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="在庫アイテムを検索..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-white"
-                />
-              </div>
+          <div className="space-y-6">
+            {/* Metric Cards (在庫タブでのみ表示し、買い物・期限タブの一覧性を最大化) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <Card>
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">総登録品目</p>
+                    <p className="text-2xl font-bold text-slate-900">{summary.totalItems}</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-100 text-slate-600">
+                    <Layers className="h-5 w-5" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={summary.shortageCount > 0 ? 'border-rose-200 bg-rose-50/50' : ''}
+              >
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-rose-600">買い物候補 (不足)</p>
+                    <p className="text-2xl font-bold text-rose-700">{summary.shortageCount}</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-rose-100 text-rose-600">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={summary.expiringCount > 0 ? 'border-amber-200 bg-amber-50/50' : ''}
+              >
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-amber-600">期限間近 (7日以内)</p>
+                    <p className="text-2xl font-bold text-amber-700">{summary.expiringCount}</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-600">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={summary.expiredCount > 0 ? 'border-rose-300 bg-rose-100/50' : ''}
+              >
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-rose-800">期限超過</p>
+                    <p className="text-2xl font-bold text-rose-900">{summary.expiredCount}</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-rose-200 text-rose-800">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+                {/* Search */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="在庫アイテムを検索..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 bg-white"
+                  />
+                </div>
 
               {/* Controls (Category filter & Add button) */}
               <div className="flex items-center gap-2">
@@ -537,7 +538,8 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
 
         {/* Tab 2: Shopping List */}
         {activeTab === 'shopping' && (
