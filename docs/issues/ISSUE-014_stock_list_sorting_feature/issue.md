@@ -41,7 +41,7 @@
 
 ## 3. 受け入れ基準 (Acceptance Criteria / DoD)
 
-- [ ] **純粋ドメインソートロジックの実装**:
+- [x] **純粋ドメインソートロジックの実装**:
   - `frontend/src/core/stockSort.ts` を新設し、`sortStockItems(items, sortKey)` 純粋関数および `StockSortKey`, `STOCK_SORT_OPTIONS` を提供すること。
   - 以下の 7 種類のソート順をサポートすること：
     1. `category`: カテゴリ順（標準: カテゴリ昇順 → 品名昇順）
@@ -51,13 +51,13 @@
     5. `quantityDesc`: 残量が多い順（残量レベル/数量降順 → 品名昇順）
     6. `nameAsc`: 名前順（品名昇順 `localeCompare('ja')`）
     7. `updatedDesc`: 更新が新しい順（`updatedAt` 降順 → `createdAt` 降順 → ID降順）
-- [ ] **単体テスト網羅**:
+- [x] **単体テスト網羅**:
   - `frontend/tests/core/stockSort.test.ts` を作成し、各ソート順の正常系、期限未設定（null/undefined）、残量・数量混在、非破壊ソートの各ケースを 100% パスすること。
-- [ ] **UI 統合**:
+- [x] **UI 統合**:
   - `App.tsx` の在庫タブ上部に並び替え用セレクターを配置し、選択状態に応じて在庫一覧が即座に並び替わること。
   - 検索クエリやカテゴリ絞り込みとソートが連動して正常に機能すること。
-- [ ] **レスポンシブ対応**:
+- [x] **レスポンシブ対応**:
   - デスクトップおよびスマートフォンの両方でレイアウト崩れなく快適に操作できること。
-- [ ] **品質ゲート・規約準拠**:
+- [x] **品質ゲート・規約準拠**:
   - `npm run check:fast`, `npm run test:related`, `npm run check:docs`, `npm run check` の全テスト・静的解析・型検査を通過すること。
   - 4 ドキュメント（`issue.md`, `pre_verification.md`, `plan.md`, `walkthrough.md`）の整合性が保たれていること。
