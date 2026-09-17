@@ -296,17 +296,17 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
             </div>
 
             <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="在庫アイテムを検索..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-white"
-                />
-              </div>
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+                {/* Search */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="在庫アイテムを検索..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 bg-white"
+                  />
+                </div>
 
               {/* Controls (Category filter & Add button) */}
               <div className="flex items-center gap-2">
