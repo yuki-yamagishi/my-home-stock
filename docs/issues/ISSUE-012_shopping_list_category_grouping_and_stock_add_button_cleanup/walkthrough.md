@@ -27,7 +27,7 @@
 - [x] ドメインコアロジック単体テスト全件合格 (`npm.cmd run test:related`: 3 テストファイル 25 テスト全パス)
 - [x] TypeScript Strict 型検査合格 (`npm.cmd run check:fast`: エラー 0 件)
 - [x] ドキュメント・プラグイン・OpenAPI 整合性検証合格 (`npm.cmd run check:docs`)
-- [ ] フル品質ゲート合格 (`npm.cmd run check`)
+- [x] フル品質ゲート合格 (`npm.cmd run check`)
 
 ---
 
