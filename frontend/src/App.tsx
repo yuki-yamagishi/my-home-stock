@@ -10,6 +10,7 @@ import {
   Search,
   Pencil,
   RotateCcw,
+  ArrowUpDown,
 } from 'lucide-react';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
@@ -45,6 +46,11 @@ import {
   groupShoppingListByCategory,
   getShoppingListCategoryCounts,
 } from './core/shoppingList';
+import {
+  sortStockItems,
+  STOCK_SORT_OPTIONS,
+  type StockSortKey,
+} from './core/stockSort';
 import { ApiError } from './api/client';
 import type { StockItem, StockItemInput, AuthUser, RemainingLevel } from './api/schema';
 
@@ -58,6 +64,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedShoppingCategory, setSelectedShoppingCategory] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<StockSortKey>('category');
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -83,14 +90,15 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   }, [allStocks]);
 
   const filteredStocks = useMemo(() => {
-    return allStocks.filter((item) => {
+    const filtered = allStocks.filter((item) => {
       const matchQuery =
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.memo && item.memo.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchCat = selectedCategory === 'all' || item.category === selectedCategory;
       return matchQuery && matchCat;
     });
-  }, [allStocks, searchQuery, selectedCategory]);
+    return sortStockItems(filtered, sortBy);
+  }, [allStocks, searchQuery, selectedCategory, sortBy]);
 
   const shoppingCategoryCounts = useMemo(() => {
     return getShoppingListCategoryCounts(shoppingList);
@@ -296,21 +304,48 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
             </div>
 
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
-                {/* Search */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    placeholder="在庫アイテムを検索..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 bg-white"
-                  />
+              <div className="flex flex-col gap-3">
+                {/* 検索バー + 並び替えセレクター + デスクトップ在庫追加ボタン */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <Input
+                      placeholder="在庫アイテムを検索..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 bg-white h-9 text-sm"
+                    />
+                  </div>
+
+                  {/* 並び替えセレクター */}
+                  <div className="relative shrink-0 flex items-center">
+                    <ArrowUpDown className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as StockSortKey)}
+                      className="h-9 pl-8 pr-3 bg-white border border-slate-200 text-slate-700 text-xs font-medium rounded-lg hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer shadow-sm"
+                      aria-label="並び替え順"
+                    >
+                      {STOCK_SORT_OPTIONS.map((opt) => (
+                        <option key={opt.key} value={opt.key}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 在庫追加ボタン (デスクトップおよびタブ上部用: モバイルは右下FABに一本化) */}
+                  <Button
+                    type="button"
+                    onClick={() => setIsCreateOpen(true)}
+                    className="hidden sm:flex bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 items-center gap-1.5 shadow-sm text-xs sm:text-sm px-3 py-1.5 h-9"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>在庫を追加</span>
+                  </Button>
                 </div>
 
-              {/* Controls (Category filter & Add button) */}
-              <div className="flex items-center gap-2">
-                {/* Category Filter */}
+                {/* カテゴリフィルター */}
                 <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
                   {categories.map((cat) => (
                     <button
@@ -326,18 +361,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                     </button>
                   ))}
                 </div>
-
-                {/* 在庫追加ボタン (デスクトップおよびタブ上部用: モバイルは右下FABに一本化) */}
-                <Button
-                  type="button"
-                  onClick={() => setIsCreateOpen(true)}
-                  className="hidden sm:flex bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 items-center gap-1.5 shadow-sm text-xs sm:text-sm px-3 py-1.5 h-9"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>在庫を追加</span>
-                </Button>
               </div>
-            </div>
 
             {isLoadingStocks ? (
               <div className="py-12 text-center text-slate-500">
