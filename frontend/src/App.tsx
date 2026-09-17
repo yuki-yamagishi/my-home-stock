@@ -41,6 +41,10 @@ import {
   REMAINING_LEVEL_CONFIGS,
   remainingLevelToQuantity,
 } from './core/stockStatus';
+import {
+  groupShoppingListByCategory,
+  getShoppingListCategoryCounts,
+} from './core/shoppingList';
 import { ApiError } from './api/client';
 import type { StockItem, StockItemInput, AuthUser, RemainingLevel } from './api/schema';
 
@@ -53,6 +57,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<'stocks' | 'shopping' | 'expiring'>('stocks');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedShoppingCategory, setSelectedShoppingCategory] = useState<string>('all');
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -86,6 +91,14 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
       return matchQuery && matchCat;
     });
   }, [allStocks, searchQuery, selectedCategory]);
+
+  const shoppingCategoryCounts = useMemo(() => {
+    return getShoppingListCategoryCounts(shoppingList);
+  }, [shoppingList]);
+
+  const groupedShoppingList = useMemo(() => {
+    return groupShoppingListByCategory(shoppingList, selectedShoppingCategory);
+  }, [shoppingList, selectedShoppingCategory]);
 
   const handleCreateSubmit = (payload: StockItemInput, resetForm: () => void) => {
     createMutation.mutate(payload, {
@@ -140,6 +153,73 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
     if (confirm('この在庫アイテムを削除してもよろしいですか？')) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const renderShoppingCard = (item: StockItem) => {
+    const isLevel = item.stockType === 'REMAINING_LEVEL';
+    const levelCfg = isLevel && item.remainingLevel
+      ? REMAINING_LEVEL_CONFIGS[item.remainingLevel]
+      : null;
+
+    return (
+      <Card key={item.id} className="border-rose-200 bg-rose-50/30">
+        <CardContent className="p-4 flex items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-500">{item.category}</span>
+              {isLevel && levelCfg && (
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${levelCfg.colorClasses.badge}`}
+                >
+                  {levelCfg.label} ({levelCfg.subtext})
+                </span>
+              )}
+            </div>
+            <h4 className="text-base font-bold text-slate-900 mt-0.5">
+              {item.name}
+            </h4>
+            <p className="text-xs text-rose-600 font-medium mt-1">
+              {isLevel && levelCfg
+                ? `残量: ${levelCfg.label} / 補充を推奨`
+                : `現在: ${item.quantity} ${item.unit} / 補充目安: ${item.minThreshold} ${item.unit}`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900 border-slate-200"
+              onClick={() => setEditingItem(item)}
+              title="詳細編集"
+              aria-label={`${item.name}を編集`}
+            >
+              <Pencil className="h-3.5 w-3.5 mr-1" />
+              編集
+            </Button>
+            {isLevel ? (
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-sm"
+                onClick={() => handleSetRemainingLevel(item, 'FULL')}
+                disabled={updateMutation.isPending}
+                title="残量を「十分」に復帰させます"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                補充完了 (十分)
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={() => handleAddOne(item)}
+              >
+                購入完了 (+1)
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -246,11 +326,11 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                   ))}
                 </div>
 
-                {/* 在庫追加ボタン (デスクトップおよびタブ上部用) */}
+                {/* 在庫追加ボタン (デスクトップおよびタブ上部用: モバイルは右下FABに一本化) */}
                 <Button
                   type="button"
                   onClick={() => setIsCreateOpen(true)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 flex items-center gap-1.5 shadow-sm text-xs sm:text-sm px-3 py-1.5 h-9"
+                  className="hidden sm:flex bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 items-center gap-1.5 shadow-sm text-xs sm:text-sm px-3 py-1.5 h-9"
                 >
                   <Plus className="h-4 w-4" />
                   <span>在庫を追加</span>
@@ -462,6 +542,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
         {/* Tab 2: Shopping List */}
         {activeTab === 'shopping' && (
           <div className="space-y-4">
+            {/* Header & Desktop Add Button */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-slate-700">
@@ -479,79 +560,106 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
               </Button>
             </div>
 
+            {/* Shopping Category Filter (Pills with count badges) */}
+            {shoppingList.length > 0 && (
+              <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                <button
+                  type="button"
+                  onClick={() => setSelectedShoppingCategory('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 flex items-center gap-1.5 transition-colors ${
+                    selectedShoppingCategory === 'all'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>すべて</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                      selectedShoppingCategory === 'all'
+                        ? 'bg-slate-700 text-white'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {shoppingCategoryCounts.all}
+                  </span>
+                </button>
+                {STOCK_CATEGORIES.map((cat) => {
+                  const count = shoppingCategoryCounts[cat] || 0;
+                  const isSelected = selectedShoppingCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedShoppingCategory(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 flex items-center gap-1.5 transition-colors ${
+                        isSelected
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>{cat}</span>
+                      {count > 0 && (
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                            isSelected
+                              ? 'bg-rose-500 text-white'
+                              : 'bg-rose-100 text-rose-700'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Empty State: Whole Shopping List */}
             {shoppingList.length === 0 ? (
               <div className="py-12 text-center text-sm text-slate-500 bg-white rounded-xl border border-dashed border-slate-200">
                 <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
                 現在、補充が必要な在庫アイテムはありません！
               </div>
-            ) : (
+            ) : selectedShoppingCategory !== 'all' && (groupedShoppingList[0]?.count ?? 0) === 0 ? (
+              /* Empty State: Filtered Category has 0 items */
+              <div className="py-12 text-center text-sm text-slate-500 bg-white rounded-xl border border-dashed border-slate-200 space-y-3">
+                <p className="text-slate-600 font-medium">
+                  「{selectedShoppingCategory}」には現在、補充が必要なアイテムはありません。
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedShoppingCategory('all')}
+                  className="text-xs"
+                >
+                  すべての買い物候補を表示
+                </Button>
+              </div>
+            ) : selectedShoppingCategory !== 'all' ? (
+              /* Single Category Filtered View */
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {shoppingList.map((item) => {
-                  const isLevel = item.stockType === 'REMAINING_LEVEL';
-                  const levelCfg = isLevel && item.remainingLevel
-                    ? REMAINING_LEVEL_CONFIGS[item.remainingLevel]
-                    : null;
-
-                  return (
-                    <Card key={item.id} className="border-rose-200 bg-rose-50/30">
-                      <CardContent className="p-4 flex items-center justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs text-slate-500">{item.category}</span>
-                            {isLevel && levelCfg && (
-                              <span
-                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${levelCfg.colorClasses.badge}`}
-                              >
-                                {levelCfg.label} ({levelCfg.subtext})
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="text-base font-bold text-slate-900 mt-0.5">
-                            {item.name}
-                          </h4>
-                          <p className="text-xs text-rose-600 font-medium mt-1">
-                            {isLevel && levelCfg
-                              ? `残量: ${levelCfg.label} / 補充を推奨`
-                              : `現在: ${item.quantity} ${item.unit} / 補充目安: ${item.minThreshold} ${item.unit}`}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900 border-slate-200"
-                            onClick={() => setEditingItem(item)}
-                            title="詳細編集"
-                            aria-label={`${item.name}を編集`}
-                          >
-                            <Pencil className="h-3.5 w-3.5 mr-1" />
-                            編集
-                          </Button>
-                          {isLevel ? (
-                            <Button
-                              size="sm"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-sm"
-                              onClick={() => handleSetRemainingLevel(item, 'FULL')}
-                              disabled={updateMutation.isPending}
-                              title="残量を「十分」に復帰させます"
-                            >
-                              <RotateCcw className="h-3.5 w-3.5" />
-                              補充完了 (十分)
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                              onClick={() => handleAddOne(item)}
-                            >
-                              購入完了 (+1)
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                {groupedShoppingList[0]?.items.map(renderShoppingCard)}
+              </div>
+            ) : (
+              /* Grouped by Category View ('all') */
+              <div className="space-y-6">
+                {groupedShoppingList.map((group) => (
+                  <div key={group.category} className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-200 pb-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                      <h4 className="text-sm font-bold text-slate-800">
+                        {group.category}
+                      </h4>
+                      <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
+                        {group.count} 件
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {group.items.map(renderShoppingCard)}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
