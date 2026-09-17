@@ -4,5 +4,5 @@
 > 本ファイルは常に最新の進行中フェーズのドキュメントを保持します。
 > 個別の Issue ドキュメントは `docs/issues/` 配下の各 Issue フォルダに完全に保全されています。
 
-## 現在進行中: ISSUE-011 ([ISSUE-011] スマートフォン向けUI/UX最適化（ヘッダー見切れ解消・ボトムナビ導入・在庫追加モーダル化）)
-詳細は [docs/issues/ISSUE-011_mobile_header_and_quick_add_ux_improvement/pre_verification.md](./issues/ISSUE-011_mobile_header_and_quick_add_ux_improvement/pre_verification.md) を参照。
+## 現在進行中: ISSUE-012 ([ISSUE-012] 買い物リストのカテゴリ別表示・絞り込み導入および在庫管理画面の重複追加ボタン整理)
+詳細は [docs/issues/ISSUE-012_shopping_list_category_grouping_and_stock_add_button_cleanup/pre_verification.md](./issues/ISSUE-012_shopping_list_category_grouping_and_stock_add_button_cleanup/pre_verification.md) を参照。
