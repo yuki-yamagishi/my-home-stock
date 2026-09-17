@@ -20,7 +20,7 @@
 - [x] 単体テスト全件合格 (`npm.cmd run test:related`: 25件全パス)
 - [x] TypeScript Strict 型検査合格 (`npm.cmd run check:fast`: エラー0件)
 - [x] ドキュメント整合性検証合格 (`npm.cmd run check:docs`)
-- [ ] フル品質ゲート合格 (`npm.cmd run check`)
+- [x] フル品質ゲート合格 (`npm.cmd run check`)
 
 ---
 
