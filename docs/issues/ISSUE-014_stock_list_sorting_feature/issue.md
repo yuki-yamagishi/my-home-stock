@@ -1,10 +1,10 @@
 # [ISSUE-014] 在庫一覧の並び替え（ソート）機能の実装
 
-* **ステータス**: 🟣 `status: in-progress`
+* **ステータス**: ✅ `status: closed`
 * **種別**: 🟢 `type: feature` / 🎨 `type: ui/ux`
 * **担当者**: AIエージェント
 * **作成日**: 2026-09-17
-* **関連 GitHub Issue**: ISSUE-014
+* **関連 GitHub Issue / PR**: PR #19 / [GitHub Issue #25](https://github.com/yuki-yamagishi/my-home-stock/issues/25)
 
 ---
 

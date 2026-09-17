@@ -4,7 +4,7 @@
 * **種別**: 🟢 `type: feature` / 🎨 `type: ui/ux`
 * **担当者**: AIエージェント
 * **作成日**: 2026-09-17
-* **関連 GitHub Issue**: ISSUE-012
+* **関連 GitHub Issue / PR**: PR #17 / [GitHub Issue #23](https://github.com/yuki-yamagishi/my-home-stock/issues/23)
 
 ---
 

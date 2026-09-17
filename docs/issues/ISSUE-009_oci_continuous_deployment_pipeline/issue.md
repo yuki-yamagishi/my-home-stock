@@ -1,10 +1,11 @@
 # [ISSUE-009] OCI Always Free 向け GitHub Actions イミュータブル継続的デプロイ（CD）パイプラインの構築
 
-* **ステータス**: 🔵 `status: in-progress`
+* **ステータス**: ✅ `status: closed`
 * **種別**: 🚀 `type: ci` / 🛠️ `type: harness`
 * **担当者**: AIエージェント
 * **作成日**: 2026-09-15
-* **関連 ADR / PR**: ADR-0005, ADR-0007, ADR-0011 (新規予定)
+* **関連 ADR / PR / GitHub Issue**: ADR-0011 / PR #12 / [GitHub Issue #20](https://github.com/yuki-yamagishi/my-home-stock/issues/20)
+
 
 ---
 

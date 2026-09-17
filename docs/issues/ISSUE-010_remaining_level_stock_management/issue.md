@@ -4,7 +4,7 @@
 * **種別**: 🟢 `type: feature` / 🎨 `type: ui/ux`
 * **担当者**: AIエージェント
 * **作成日**: 2026-09-16
-* **関連 ADR / GitHub Issue**: ADR-0012 / ISSUE-010
+* **関連 ADR / GitHub Issue**: ADR-0012 / PR #13, #14 / [GitHub Issue #21](https://github.com/yuki-yamagishi/my-home-stock/issues/21)
 
 ---
 
