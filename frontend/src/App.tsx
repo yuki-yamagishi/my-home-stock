@@ -574,7 +574,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                 >
                   <span>すべて</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
                       selectedShoppingCategory === 'all'
                         ? 'bg-slate-700 text-white'
                         : 'bg-slate-100 text-slate-600'
@@ -600,7 +600,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                       <span>{cat}</span>
                       {count > 0 && (
                         <span
-                          className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
                             isSelected
                               ? 'bg-rose-500 text-white'
                               : 'bg-rose-100 text-rose-700'

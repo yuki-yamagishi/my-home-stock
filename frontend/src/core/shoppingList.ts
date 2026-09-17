@@ -20,7 +20,7 @@ export interface CategoryGroup {
  */
 export function groupShoppingListByCategory(
   items: StockItem[],
-  selectedCategory: string = 'all'
+  selectedCategory: StockCategory | 'all' | string = 'all'
 ): CategoryGroup[] {
   if (selectedCategory !== 'all') {
     // 特定カテゴリ選択時: 該当カテゴリのアイテムのみを抽出
@@ -75,10 +75,10 @@ export function groupShoppingListByCategory(
  */
 export function getShoppingListCategoryCounts(
   items: StockItem[]
-): Record<string, number> {
-  const counts: Record<string, number> = {
+): Record<StockCategory | 'all', number> {
+  const counts = {
     all: items.length,
-  };
+  } as Record<StockCategory | 'all', number>;
 
   for (const cat of STOCK_CATEGORIES) {
     counts[cat] = 0;

@@ -36,3 +36,5 @@
 | 重要度 | 指摘・改善提案 | レビュアー | 対応内容 | 反映ファイル |
 | :--- | :--- | :--- | :--- | :--- |
 | `[imo]` | 「すべて」選択時のグルーピング表示における 0 件カテゴリの扱い（1件以上のカテゴリのみ表示） | Pre-Phase DoR Auditor | `groupShoppingListByCategory` にて 1件以上存在するカテゴリのみをグループ配列に含めるよう実装完了 | `frontend/src/core/shoppingList.ts` |
+| `[imo]` | `shoppingList.ts` の引数・戻り値型のさらなる Type-safe 化 | Fleet Code Reviewer | `selectedCategory` に `StockCategory` を含め、戻り値型を `Record<StockCategory \| 'all', number>` へ厳格化 | `frontend/src/core/shoppingList.ts` |
+| `[nits]` | カテゴリピル内件数バッジの Tailwind CSS パディング修正 | Fleet Code Reviewer | `py-0.2` を標準 Tailwind クラス `py-0.5` に統一 | `frontend/src/App.tsx` |
