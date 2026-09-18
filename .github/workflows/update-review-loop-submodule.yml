@@ -1,11 +1,9 @@
 name: Update antigravity-review-loop Submodule
 
 on:
-  repository_dispatch:
-    types: [update-review-loop, submodule-update]
-  workflow_dispatch:
+  workflow_dispatch: # Manual trigger from GitHub UI / CLI
   schedule:
-    - cron: '0 2 * * *' # Daily at 02:00 UTC (11:00 JST) as a fallback
+    - cron: '0 */6 * * *' # Every 6 hours autonomous polling
 
 permissions:
   contents: write
