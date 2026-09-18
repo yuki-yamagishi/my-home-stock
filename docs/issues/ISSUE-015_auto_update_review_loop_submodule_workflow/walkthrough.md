@@ -43,3 +43,8 @@
 | 重要度 | 指摘・改善提案 | 対応内容 | 反映ファイル |
 | :--- | :--- | :--- | :--- |
 | - | 初期実装完了 | ワークフロー作成、ADR-0013作成、Submodule追跡設定、連携ガイド作成 | `.github/workflows/update-review-loop-submodule.yml` 他 |
+| `[must]` | `NEW_SHA` 取得コマンドがインデックスを参照し古い SHA が取れるバグ (`fleet_reviewer`, `fleet_completion_auditor`) | `git -C .agents/plugins/antigravity-review-loop rev-parse --short HEAD` に修正し、最新コミット SHA が確実に取得されるよう是正 | `.github/workflows/update-review-loop-submodule.yml` |
+| `[must]` | アップストリーム連携ガイドにおける Fine-grained PAT 権限誤記 (`fleet_reviewer`, `fleet_completion_auditor`) | `repository_dispatch` API 実行に必須の `Contents: Read and write` 権限に手順書を修正 | `docs/guides/review_loop_submodule_sync_setup.md` |
+| `[should]` | `GITHUB_TOKEN` 起票 PR における CI 自動発火制約への多重防衛 (`fleet_reviewer`, `fleet_completion_auditor`, `stock_domain_auditor`) | PR 起票前に `qualityGateRunner.js` に加えてフロントエンド厳格型検査 (`npm run type-check`) および単体テスト全件 (`npm run test:run`) を事前実行するステップを追加し、PR 本文および ADR-0013 に仕様と運用方針を明記 | `.github/workflows/update-review-loop-submodule.yml`, `docs/adr/0013-automated-submodule-update-workflow.md` |
+| `[imo]` | heredoc デリミタの衝突防止 (`fleet_reviewer`) | `DELIMITER="EOF_$(date +%s)"` を使用して一意性を担保 | `.github/workflows/update-review-loop-submodule.yml` |
+

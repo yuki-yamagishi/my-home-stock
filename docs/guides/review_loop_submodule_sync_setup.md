@@ -52,7 +52,7 @@ jobs:
    - **Expiration**: 90 days または 1 year（運用ポリシーに合わせて設定）
    - **Repository access**: **Only select repositories** -> `yuki-yamagishi/my-home-stock` を選択
    - **Permissions**:
-     - **Actions**: `Read and write`（Actions のワークフロー発火権限）
+     - **Contents**: `Read and write`（repository_dispatch イベントの発火に必須）
      - **Metadata**: `Read-only`（自動付与）
 4. 「**Generate token**」をクリックし、生成されたトークン文字列をコピー。
 

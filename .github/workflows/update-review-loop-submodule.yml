@@ -53,15 +53,16 @@ jobs:
         if: steps.git_status.outputs.has_changes == 'true'
         id: submodule_info
         run: |
-          NEW_SHA=$(git rev-parse --short :.agents/plugins/antigravity-review-loop)
+          NEW_SHA=$(git -C .agents/plugins/antigravity-review-loop rev-parse --short HEAD)
           COMMIT_DATE=$(git -C .agents/plugins/antigravity-review-loop log -1 --format=%cd --date=iso)
           COMMIT_LOG=$(git -C .agents/plugins/antigravity-review-loop log -n 5 --oneline)
+          DELIMITER="EOF_$(date +%s)"
           echo "new_sha=$NEW_SHA" >> $GITHUB_OUTPUT
           echo "commit_date=$COMMIT_DATE" >> $GITHUB_OUTPUT
           {
-            echo "commit_log<<EOF"
+            echo "commit_log<<$DELIMITER"
             echo "$COMMIT_LOG"
-            echo "EOF"
+            echo "$DELIMITER"
           } >> $GITHUB_OUTPUT
 
       - name: Setup Node.js for Quality Gate Verification
@@ -70,9 +71,19 @@ jobs:
         with:
           node-version: 22
 
-      - name: Run MyHomeStock Quality Gate Pre-validation
+      - name: Install Frontend Dependencies for Verification
         if: steps.git_status.outputs.has_changes == 'true'
-        run: node .agents/plugins/myhomestock/hooks/qualityGateRunner.js
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run MyHomeStock Quality Gate & Frontend Verification
+        if: steps.git_status.outputs.has_changes == 'true'
+        run: |
+          node .agents/plugins/myhomestock/hooks/qualityGateRunner.js
+          cd frontend
+          npm run type-check
+          npm run test:run
 
       - name: Create Pull Request
         if: steps.git_status.outputs.has_changes == 'true'
@@ -98,9 +109,11 @@ jobs:
             ${{ steps.submodule_info.outputs.commit_log }}
             ```
 
-            ### 検証状況
-            - [x] プラグイン展開 & 品質ゲート事前検証 (`qualityGateRunner.js`) 完了
-            - [ ] 既存 CI (`ci.yml`: Javaテスト、TypeScript型検査、Vitest、プロダクションビルド) の合格確認
+            ### 検証状況 (本ワークフロー内で事前パス済)
+            - [x] プラグイン展開 & ドキュメント整合性・セキュリティ検査 (`qualityGateRunner.js`) PASS
+            - [x] フロントエンド厳格型検査 (`npm run type-check`) PASS
+            - [x] フロントエンド単体テスト全件 (`npm run test:run`) PASS
+            - [ ] ※ GITHUB_TOKEN 起票のため pull_request イベント CI は自動発火しませんが、本ワークフロー内ですべての事前検証が PASS しています。必要に応じてマージ前に手動で CI を実行してください。
           labels: |
             dependencies
             automated-pr
