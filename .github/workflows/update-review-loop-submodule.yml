@@ -1,0 +1,106 @@
+name: Update antigravity-review-loop Submodule
+
+on:
+  repository_dispatch:
+    types: [update-review-loop, submodule-update]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *' # Daily at 02:00 UTC (11:00 JST) as a fallback
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-submodule:
+    name: Update Submodule & Create PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Record Current Submodule SHA
+        id: current_sha
+        run: |
+          OLD_SHA=$(git rev-parse --short :.agents/plugins/antigravity-review-loop)
+          echo "old_sha=$OLD_SHA" >> $GITHUB_OUTPUT
+
+      - name: Update Submodule to Latest Remote
+        run: |
+          git submodule update --remote --merge .agents/plugins/antigravity-review-loop
+
+      - name: Check for Submodule Changes
+        id: git_status
+        run: |
+          if git diff --quiet .agents/plugins/antigravity-review-loop; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "Submodule .agents/plugins/antigravity-review-loop is already up to date."
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Submodule .agents/plugins/antigravity-review-loop has new commits."
+          fi
+
+      - name: Extract Submodule Commit Info
+        if: steps.git_status.outputs.has_changes == 'true'
+        id: submodule_info
+        run: |
+          NEW_SHA=$(git rev-parse --short :.agents/plugins/antigravity-review-loop)
+          COMMIT_DATE=$(git -C .agents/plugins/antigravity-review-loop log -1 --format=%cd --date=iso)
+          COMMIT_LOG=$(git -C .agents/plugins/antigravity-review-loop log -n 5 --oneline)
+          echo "new_sha=$NEW_SHA" >> $GITHUB_OUTPUT
+          echo "commit_date=$COMMIT_DATE" >> $GITHUB_OUTPUT
+          {
+            echo "commit_log<<EOF"
+            echo "$COMMIT_LOG"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js for Quality Gate Verification
+        if: steps.git_status.outputs.has_changes == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Run MyHomeStock Quality Gate Pre-validation
+        if: steps.git_status.outputs.has_changes == 'true'
+        run: node .agents/plugins/myhomestock/hooks/qualityGateRunner.js
+
+      - name: Create Pull Request
+        if: steps.git_status.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/update-antigravity-review-loop
+          base: main
+          delete-branch: true
+          title: "chore(deps): update antigravity-review-loop submodule to ${{ steps.submodule_info.outputs.new_sha }}"
+          commit-message: "chore(deps): update antigravity-review-loop submodule to ${{ steps.submodule_info.outputs.new_sha }}"
+          body: |
+            ## 概要
+            `antigravity-review-loop`（アップストリーム）の更新を検知し、サブモジュールを最新コミットに更新しました。
+
+            ### 更新内容
+            - **対象**: `.agents/plugins/antigravity-review-loop`
+            - **コミット**: `${{ steps.current_sha.outputs.old_sha }}` → `${{ steps.submodule_info.outputs.new_sha }}`
+            - **更新日時**: `${{ steps.submodule_info.outputs.commit_date }}`
+
+            ### 最新コミットログ
+            ```text
+            ${{ steps.submodule_info.outputs.commit_log }}
+            ```
+
+            ### 検証状況
+            - [x] プラグイン展開 & 品質ゲート事前検証 (`qualityGateRunner.js`) 完了
+            - [ ] 既存 CI (`ci.yml`: Javaテスト、TypeScript型検査、Vitest、プロダクションビルド) の合格確認
+          labels: |
+            dependencies
+            automated-pr
