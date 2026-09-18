@@ -17,6 +17,7 @@
 | **[ADR-0010](0010-google-oauth2-database-household-authorization.md)** | Google OAuth2認証とデータベース駆動型世帯・メンバー管理（パターンB）の導入 | 承認済 | 2026-09-14 |
 | **[ADR-0011](0011-oci-continuous-deployment-ghcr.md)** | OCI Always Free 向け GitHub Actions イミュータブル CD パイプラインと Watchtower による Pull 型デプロイの導入 | 承認済 | 2026-09-15 |
 | **[ADR-0012](0012-remaining-level-stock-management.md)** | 測量不要な消耗品向け「4段階残量レベル管理」と個数管理のハイブリッドデータモデル | 承認済 | 2026-09-16 |
+| **[ADR-0013](0013-automated-submodule-update-workflow.md)** | アップストリーム非干渉・完全自律 Pull 型による Git Submodule 自動同期アーキテクチャ | 承認済 | 2026-09-18 |
 
 ---
 
