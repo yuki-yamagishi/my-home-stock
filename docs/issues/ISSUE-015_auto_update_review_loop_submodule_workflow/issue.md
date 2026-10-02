@@ -1,6 +1,6 @@
 # ISSUE-015: antigravity-review-loop 自動更新 GitHub Actions ワークフローの導入
 
-- **ステータス**: 🟣 進行中 (`status: in-progress`)
+- **ステータス**: ✅ 完了 (`status: closed`)
 - **優先度**: 高 (High / Automation & Governance)
 - **カテゴリ**: `type: ci`, GitHub Actions, Git Submodule, ガバナンス自動化
 - **対象**: `.github/workflows/update-review-loop-submodule.yml`, `.github/dependabot.yml`, `.gitmodules`, `docs/adr/0013-automated-submodule-update-workflow.md`
