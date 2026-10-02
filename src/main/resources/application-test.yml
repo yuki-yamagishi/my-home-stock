@@ -41,3 +41,7 @@ springdoc:
 app:
   security:
     allowed-emails: yuki.yamagishi.contact@gmail.com,test-user@example.com
+  cors:
+    allowed-origins: http://localhost:*,http://127.0.0.1:*
+
+
