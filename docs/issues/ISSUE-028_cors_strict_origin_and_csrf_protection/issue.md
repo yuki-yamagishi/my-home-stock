@@ -40,16 +40,16 @@
 
 ## 3. 受け入れ基準 (Acceptance Criteria / DoD)
 
-- [ ] CORS 設定から `https://*.duckdns.org` のワイルドカードが完全に排除されていること。
-- [ ] 許可オリジンが `app.cors.allowed-origins`（環境変数 `CORS_ALLOWED_ORIGINS`）として外部設定化され、デフォルトはローカル開発環境（`http://localhost:*`, `http://127.0.0.1:*`）のみとなっていること。
-- [ ] 許可されていないオリジン（例: `https://attacker.duckdns.org`）からの CORS プリフライトおよびリクエストが拒絶されること。
-- [ ] バックエンドで CSRF 保護が有効化され、初回アクセス時および認証後に `XSRF-TOKEN` Cookie（`HttpOnly: false`, `Path: /`, `SameSite: Lax`）が発行されること。
-- [ ] CSRF トークンを持たない、または無効なトークンを伴う POST / PUT / DELETE リクエストが HTTP 403 Forbidden で拒絶されること。
-- [ ] 有効な CSRF トークン（リクエストヘッダー `X-XSRF-TOKEN`）を伴う POST / PUT / DELETE リクエストが正常に処理されること。
-- [ ] フロントエンドの `api/client.ts` において、`document.cookie` から `XSRF-TOKEN` を自動抽出し、状態変更リクエスト（POST, PUT, DELETE, PATCH）に `X-XSRF-TOKEN` ヘッダーを自動付与すること。
-- [ ] フロントエンドの `logout` 処理においても `X-XSRF-TOKEN` ヘッダーが付与され、正常にログアウトできること。
-- [ ] 全てのバックエンド単体・統合テストおよびフロントエンドテストが PASS すること。
-- [ ] ADR-0014 が作成され、`docs/adr/README.md` に登録されていること。
+- [x] CORS 設定から `https://*.duckdns.org` のワイルドカードが完全に排除されていること。
+- [x] 許可オリジンが `app.cors.allowed-origins`（環境変数 `CORS_ALLOWED_ORIGINS`）として外部設定化され、デフォルトはローカル開発環境（`http://localhost:*`, `http://127.0.0.1:*`）のみとなっていること。
+- [x] 許可されていないオリジン（例: `https://attacker.duckdns.org`）からの CORS プリフライトおよびリクエストが拒絶されること。
+- [x] バックエンドで CSRF 保護が有効化され、初回アクセス時および認証後に `XSRF-TOKEN` Cookie（`HttpOnly: false`, `Path: /`, `SameSite: Lax`）が発行されること。
+- [x] CSRF トークンを持たない、または無効なトークンを伴う POST / PUT / DELETE リクエストが HTTP 403 Forbidden で拒絶されること。
+- [x] 有効な CSRF トークン（リクエストヘッダー `X-XSRF-TOKEN`）を伴う POST / PUT / DELETE リクエストが正常に処理されること。
+- [x] フロントエンドの `api/client.ts` において、`document.cookie` から `XSRF-TOKEN` を自動抽出し、状態変更リクエスト（POST, PUT, DELETE, PATCH）に `X-XSRF-TOKEN` ヘッダーを自動付与すること。
+- [x] フロントエンドの `logout` 処理においても `X-XSRF-TOKEN` ヘッダーが付与され、正常にログアウトできること。
+- [x] 全てのバックエンド単体・統合テストおよびフロントエンドテストが PASS すること。
+- [x] ADR-0014 が作成され、`docs/adr/README.md` に登録されていること。
 
 ---
 
