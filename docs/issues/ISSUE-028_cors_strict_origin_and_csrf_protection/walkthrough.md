@@ -1,7 +1,7 @@
 # 実装成果レポート (Walkthrough Report) - ISSUE-028
 
 - **対象Issue**: [ISSUE-028] CORS オリジン厳格化（DuckDNS ワイルドカード排除）および Cookie セッションに対する CSRF 保護の導入
-- **ステータス**: 🟢 実装完了・レビュー準備中 (`status: in-progress`)
+- **ステータス**: 🟢 レビュー合議成立・マージ待ち (`status: in-progress`)
 - **作成日**: 2026-10-03
 
 ---
@@ -51,6 +51,6 @@
 
 | # | レビュアー | 指摘内容 (Conventional Comments) | 重要度 | 対応方針 / 修正コミット |
 | :- | :--- | :--- | :--- | :--- |
-| 1 | Fleet Reviewer | （初回レビュー待ち） | - | - |
-| 2 | Completion Auditor | （初回監査待ち） | - | - |
-| 3 | Stock Domain Auditor | （初回監査待ち） | - | - |
+| 1 | Fleet Reviewer | `[good]` CORS ワイルドカード排除と外部化、`logout` への CSRF ヘッダー明示付与、網羅的なテストスイートを高く評価。ブロッキング指摘なし。 | `[good]` | 合議承認 (`LGTM`) |
+| 2 | Completion Auditor | `[good]` Why-First 原則、4大排除リスクの封じ込め、全10項目の受け入れ基準（DoD）の完遂を確認。ブロッキング指摘なし。 | `[good]` | 合議承認 (`LGTM`) |
+| 3 | Stock Domain Auditor | `[good]` JPA楽観排他、世帯マルチテナント分離、純粋コアロジック不可侵（core/への非依存維持、client.tsへの局所化）、OpenAPI型安全の4大ドメイン原則の完全遵守を確認。 | `[good]` | 合議承認 (`LGTM`) |
