@@ -15,6 +15,10 @@
    - Spring Security 6 標準の SPA CSRF パターン（`CookieCsrfTokenRepository.withHttpOnlyFalse()` + `CsrfTokenRequestAttributeHandler` + `CsrfCookieFilter`）を導入し、状態変更 API（POST, PUT, DELETE, PATCH）に CSRF トークン（`X-XSRF-TOKEN`）の検証を物理強制しました。
    - `CsrfCookieFilter` により、認証済みリクエストに対してレスポンス Cookie（`Set-Cookie: XSRF-TOKEN=...; Path=/`）を自動発行・保存。
    - フロントエンド（`frontend/src/api/client.ts`）において、Cookie から `XSRF-TOKEN` を抽出し、状態変更リクエストおよびログアウト処理時に自動付与する仕組み（`getCsrfToken()`, `parseCsrfToken()`）を整備しました。
+3. **デプロイ環境における環境変数透過スロット整備**:
+   - `docker-compose.prod.yml` および `docker-compose.yml` の `app` サービスに `CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}` を追加。
+   - 本番ドメイン等の環境依存値を Git にハードコードせず、ホストの `.env` から安全にコンテナへ注入できる構成を確立。
+   - デプロイ設定テンプレート `.env.example` を新設。
 
 ---
 
