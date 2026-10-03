@@ -14,9 +14,9 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.2",
-    "@tanstack/query-sync-storage-persister": "^5.66.0",
+    "@tanstack/query-sync-storage-persister": "^5.102.8",
     "@tanstack/react-query": "^5.66.0",
-    "@tanstack/react-query-persist-client": "^5.66.0",
+    "@tanstack/react-query-persist-client": "^5.102.8",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
