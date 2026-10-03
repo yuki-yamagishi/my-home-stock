@@ -72,7 +72,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
 
   // Network status & Last synced timestamp
   const { isOffline } = useNetworkStatus();
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => new Date());
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   // Queries
   const { data: allStocks = [], isLoading: isLoadingStocks } = useStockList();

@@ -47,15 +47,18 @@
 
 ## 3. 検証結果
 
-- [x] 単体テスト（Vitest 8 ファイル / 56 テスト全件 PASS）
+- [x] 単体テスト（Vitest 8 ファイル / 59 テスト全件 PASS）
 - [x] TypeScript Strict 型検査（`npm run check:fast`: エラー 0 件）
 - [x] ドキュメント整合性検査（`npm run check:docs`: ADR 14 件 & Issue 17 件 整合）
 - [x] フル品質ゲート（`npm run check`: シークレット、型検査、テスト、Vite PWA プロダクションビルド全件合格）
 
 ---
 
-## 3. レビュー指摘事項と改善対応履歴
+## 4. レビュー指摘事項と改善対応履歴
 
 | # | レビュアー | 指摘内容 (Conventional Comments) | 重要度 | 対応方針 / 修正コミット |
 | :- | :--- | :--- | :--- | :--- |
-| - | - | （Fleet レビュー受領後に記録） | - | - |
+| 1 | `fleet_reviewer` | `App.tsx` の `lastSyncedAt` の初期値は未同期であることを明示する `null` にすべき | `[should]` | `useState<Date \| null>(null)` に修正。未同期時に時刻を表示せず、最初のデータ取得成功時に現在時刻をセットするよう改善。 |
+| 2 | `fleet_reviewer` | `useNetworkStatus` のカスタムフック本体に対するテストの追加 | `[should]` | `@testing-library/react` + `jsdom` を導入し、`tests/hooks/useNetworkStatus.test.ts` にイベント駆動テスト（online/offline イベント発火時の state 遷移、unmount 時のイベントリスナークリーンアップ）を網羅追加（計6件PASS）。 |
+| 3 | `fleet_reviewer` | `FamilyMembersModal` のメンバー招待ボタンにもオフライン時の disabled ガードを追加するとより一貫性が高まる | `[imo]` | `FamilyMembersModal.tsx` に `useNetworkStatus` を導入し、招待ボタンに `disabled={isOffline}` ガードを追加。 |
+

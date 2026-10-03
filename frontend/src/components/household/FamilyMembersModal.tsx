@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { useHouseholdMembers, useInviteMember } from '../../hooks/useHousehold';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 interface FamilyMembersModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export function FamilyMembersModal({
   householdName,
   isOwner = true,
 }: FamilyMembersModalProps) {
+  const { isOffline } = useNetworkStatus();
   const [email, setEmail] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -152,8 +154,9 @@ export function FamilyMembersModal({
                 />
                 <Button
                   type="submit"
-                  disabled={inviteMutation.isPending || !email.trim()}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+                  disabled={isOffline || inviteMutation.isPending || !email.trim()}
+                  title={isOffline ? 'オフラインのため招待できません' : '招待する'}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {inviteMutation.isPending ? '招待中...' : '招待する'}
                 </Button>
