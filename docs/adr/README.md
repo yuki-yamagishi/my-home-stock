@@ -18,6 +18,7 @@
 | **[ADR-0011](0011-oci-continuous-deployment-ghcr.md)** | OCI Always Free 向け GitHub Actions イミュータブル CD パイプラインと Watchtower による Pull 型デプロイの導入 | 承認済 | 2026-09-15 |
 | **[ADR-0012](0012-remaining-level-stock-management.md)** | 測量不要な消耗品向け「4段階残量レベル管理」と個数管理のハイブリッドデータモデル | 承認済 | 2026-09-16 |
 | **[ADR-0013](0013-automated-submodule-update-workflow.md)** | アップストリーム非干渉・完全自律 Pull 型による Git Submodule 自動同期アーキテクチャ | 承認済 | 2026-09-18 |
+| **[ADR-0014](0014-cors-strict-origin-and-spa-csrf-protection.md)** | CORS 設定の厳格化（ワイルドカード排除）および SPA Cookie セッションに対する CSRF 保護アーキテクチャ | 承認済 | 2026-10-03 |
 
 ---
 

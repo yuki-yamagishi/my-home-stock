@@ -21,6 +21,7 @@ import com.myhomestock.domain.entity.User;
 import com.myhomestock.domain.security.CustomOAuth2User;
 import java.util.Map;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -82,6 +83,7 @@ public class StockItemControllerTest {
 
         mockMvc.perform(post("/api/v1/stocks")
                         .with(authentication(createAuthToken(1L, 1L)))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -110,7 +112,8 @@ public class StockItemControllerTest {
         StockItem saved = repository.save(StockItem.builder().householdId("1").name("ティッシュ").category("日用品").quantity(5).minThreshold(2).build());
 
         mockMvc.perform(post("/api/v1/stocks/" + saved.getId() + "/consume?amount=2")
-                        .with(authentication(createAuthToken(1L, 1L))))
+                        .with(authentication(createAuthToken(1L, 1L)))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.quantity").value(3));
     }
@@ -129,6 +132,7 @@ public class StockItemControllerTest {
 
         mockMvc.perform(put("/api/v1/stocks/" + saved.getId())
                         .with(authentication(createAuthToken(1L, 1L)))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(conflictingRequest)))
                 .andExpect(status().isConflict())

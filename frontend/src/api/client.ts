@@ -21,14 +21,35 @@ export class ApiError extends Error {
   }
 }
 
+export function parseCsrfToken(cookieHeader?: string | null): string | null {
+  if (!cookieHeader) return null;
+  const match = cookieHeader.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+export function getCsrfToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  return parseCsrfToken(document.cookie);
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const method = (options?.method || 'GET').toUpperCase();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string>),
+  };
+
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      headers['X-XSRF-TOKEN'] = csrfToken;
+    }
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
     ...options,
+    headers,
   });
 
   if (!res.ok) {
@@ -56,9 +77,15 @@ export const api = {
   // Auth API
   getCurrentUser: () => request<AuthUser>('/auth/me'),
   logout: async () => {
+    const headers: Record<string, string> = {};
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      headers['X-XSRF-TOKEN'] = csrfToken;
+    }
     await fetch('/api/v1/auth/logout', {
       method: 'POST',
       credentials: 'include',
+      headers,
     });
   },
 
