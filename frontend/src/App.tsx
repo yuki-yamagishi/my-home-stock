@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
   Minus,
@@ -15,6 +15,8 @@ import {
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
 import { PwaInstallBanner } from './components/layout/PwaInstallBanner';
+import { OfflineBanner } from './components/layout/OfflineBanner';
+import { useNetworkStatus } from './hooks/useNetworkStatus';
 import { Button } from './components/ui/button';
 import { Card, CardContent } from './components/ui/card';
 import { Input } from './components/ui/input';
@@ -68,10 +70,21 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
+  // Network status & Last synced timestamp
+  const { isOffline } = useNetworkStatus();
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => new Date());
+
   // Queries
   const { data: allStocks = [], isLoading: isLoadingStocks } = useStockList();
   const { data: shoppingList = [] } = useShoppingList();
   const { data: expiringList = [] } = useExpiringItems(7);
+
+  // Update sync timestamp when fresh data is fetched online
+  useEffect(() => {
+    if (allStocks.length > 0 && !isOffline) {
+      setLastSyncedAt(new Date());
+    }
+  }, [allStocks, isOffline]);
 
   // Mutations
   const createMutation = useCreateStock();
@@ -198,7 +211,8 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
               variant="outline"
               className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900 border-slate-200"
               onClick={() => setEditingItem(item)}
-              title="詳細編集"
+              disabled={isOffline}
+              title={isOffline ? 'オフラインのため編集できません' : '詳細編集'}
               aria-label={`${item.name}を編集`}
             >
               <Pencil className="h-3.5 w-3.5 mr-1" />
@@ -209,8 +223,8 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                 size="sm"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-sm"
                 onClick={() => handleSetRemainingLevel(item, 'FULL')}
-                disabled={updateMutation.isPending}
-                title="残量を「十分」に復帰させます"
+                disabled={isOffline || updateMutation.isPending}
+                title={isOffline ? 'オフラインのため更新できません' : '残量を「十分」に復帰させます'}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 補充完了 (十分)
@@ -220,6 +234,8 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                 size="sm"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={() => handleAddOne(item)}
+                disabled={isOffline || updateMutation.isPending}
+                title={isOffline ? 'オフラインのため更新できません' : '購入完了 (+1)'}
               >
                 購入完了 (+1)
               </Button>
@@ -233,6 +249,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <PwaInstallBanner />
+      <OfflineBanner lastSyncedAt={lastSyncedAt} />
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -338,7 +355,9 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                   <Button
                     type="button"
                     onClick={() => setIsCreateOpen(true)}
-                    className="hidden sm:flex bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 items-center gap-1.5 shadow-sm text-xs sm:text-sm px-3 py-1.5 h-9"
+                    disabled={isOffline}
+                    title={isOffline ? 'オフラインのため追加できません' : '在庫を追加'}
+                    className="hidden sm:flex bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 items-center gap-1.5 shadow-sm text-xs sm:text-sm px-3 py-1.5 h-9 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus className="h-4 w-4" />
                     <span>在庫を追加</span>
@@ -443,16 +462,26 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                           <div className="flex items-center gap-1 shrink-0">
                             <button
                               onClick={() => setEditingItem(item)}
-                              className="text-slate-400 hover:text-emerald-600 p-1 transition-colors"
-                              title="詳細編集"
+                              disabled={isOffline}
+                              className={`p-1 transition-colors ${
+                                isOffline
+                                  ? 'text-slate-300 cursor-not-allowed'
+                                  : 'text-slate-400 hover:text-emerald-600'
+                              }`}
+                              title={isOffline ? 'オフラインのため編集できません' : '詳細編集'}
                               aria-label={`${item.name}を編集`}
                             >
                               <Pencil className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDelete(item.id)}
-                              className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
-                              title="削除"
+                              disabled={isOffline || deleteMutation.isPending}
+                              className={`p-1 transition-colors ${
+                                isOffline
+                                  ? 'text-slate-300 cursor-not-allowed'
+                                  : 'text-slate-400 hover:text-rose-600'
+                              }`}
+                              title={isOffline ? 'オフラインのため削除できません' : '削除'}
                               aria-label={`${item.name}を削除`}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -478,10 +507,11 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                                 className="h-6 px-1.5 text-[11px] text-slate-500 hover:text-slate-900"
                                 onClick={() => handleConsume(item)}
                                 disabled={
+                                  isOffline ||
                                   consumeMutation.isPending ||
                                   item.remainingLevel === 'EMPTY'
                                 }
-                                title="残量を1段階下げる"
+                                title={isOffline ? 'オフラインのため操作できません' : '残量を1段階下げる'}
                               >
                                 <Minus className="h-3 w-3 mr-0.5" />
                                 1段階消費
@@ -498,13 +528,13 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                                     key={lvl}
                                     type="button"
                                     onClick={() => handleSetRemainingLevel(item, lvl)}
-                                    disabled={updateMutation.isPending}
+                                    disabled={isOffline || updateMutation.isPending}
                                     className={`py-1 px-1 rounded-lg text-xs font-bold transition-all text-center ${
                                       isCurrent
                                         ? `${cfg.colorClasses.activeButton}`
                                         : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                    }`}
-                                    title={`${item.name}の残量を「${cfg.label}」にする`}
+                                    } ${isOffline ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    title={isOffline ? 'オフラインのため変更できません' : `${item.name}の残量を「${cfg.label}」にする`}
                                   >
                                     {cfg.label}
                                   </button>
@@ -538,7 +568,8 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                                   variant="outline"
                                   className="h-8 w-8 p-0"
                                   onClick={() => handleConsume(item)}
-                                  disabled={item.quantity <= 0 || consumeMutation.isPending}
+                                  disabled={isOffline || item.quantity <= 0 || consumeMutation.isPending}
+                                  title={isOffline ? 'オフラインのため操作できません' : '1つ減らす'}
                                 >
                                   <Minus className="h-3.5 w-3.5" />
                                 </Button>
@@ -547,7 +578,8 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                                   variant="outline"
                                   className="h-8 w-8 p-0"
                                   onClick={() => handleAddOne(item)}
-                                  disabled={updateMutation.isPending}
+                                  disabled={isOffline || updateMutation.isPending}
+                                  title={isOffline ? 'オフラインのため操作できません' : '1つ増やす'}
                                 >
                                   <Plus className="h-3.5 w-3.5" />
                                 </Button>
@@ -579,7 +611,9 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
               <Button
                 type="button"
                 onClick={() => setIsCreateOpen(true)}
-                className="hidden sm:flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 shadow-sm text-xs px-3 py-1.5 h-8"
+                disabled={isOffline}
+                title={isOffline ? 'オフラインのため追加できません' : '在庫を追加'}
+                className="hidden sm:flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 shadow-sm text-xs px-3 py-1.5 h-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>在庫を追加</span>
@@ -756,7 +790,8 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                             variant="outline"
                             className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900 border-slate-200"
                             onClick={() => setEditingItem(item)}
-                            title="詳細編集"
+                            disabled={isOffline}
+                            title={isOffline ? 'オフラインのため編集できません' : '詳細編集'}
                             aria-label={`${item.name}を編集`}
                           >
                             <Pencil className="h-3.5 w-3.5 mr-1" />
@@ -767,9 +802,11 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                             variant="secondary"
                             onClick={() => handleConsume(item)}
                             disabled={
+                              isOffline ||
                               (isLevel ? item.remainingLevel === 'EMPTY' : item.quantity <= 0) ||
                               consumeMutation.isPending
                             }
+                            title={isOffline ? 'オフラインのため操作できません' : '消費 (-1)'}
                           >
                             消費 (-1)
                           </Button>
@@ -821,9 +858,12 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
       <button
         type="button"
         onClick={() => setIsCreateOpen(true)}
-        title="在庫アイテムを追加"
+        disabled={isOffline}
+        title={isOffline ? 'オフラインのため追加できません' : '在庫アイテムを追加'}
         aria-label="在庫アイテムを追加"
-        className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-30 sm:hidden flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl shadow-emerald-900/30 hover:bg-emerald-700 active:scale-95 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-300"
+        className={`fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-30 sm:hidden flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xl shadow-emerald-900/30 hover:bg-emerald-700 active:scale-95 transition-all focus:outline-none focus:ring-4 focus:ring-emerald-300 ${
+          isOffline ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
       >
         <Plus className="h-6 w-6" />
       </button>
@@ -843,7 +883,7 @@ export function App() {
   const { user, isAuthenticated, isLoading, loginWithGoogle } = useAuth();
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
-  if (isLoading) {
+  if (isLoading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
@@ -858,6 +898,7 @@ export function App() {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
         <PwaInstallBanner />
+        <OfflineBanner />
         <Header
           activeTab="stocks"
           setActiveTab={() => {}}
