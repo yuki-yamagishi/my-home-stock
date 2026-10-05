@@ -1,6 +1,6 @@
 # [ISSUE-033] 楽観排他制御（409 Conflict）発生時の入力データ保護と競合解決UIの実装
 
-* **ステータス**: 🔵 `status: in-progress`
+* **ステータス**: ✅ `status: closed`
 * **種別**: 🟢 `type: feature` / 🎨 `type: ui/ux` / 🛡️ `type: stability`
 * **担当者**: AIエージェント
 * **作成日**: 2026-10-05
