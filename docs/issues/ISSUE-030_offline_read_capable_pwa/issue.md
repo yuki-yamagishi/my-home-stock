@@ -1,6 +1,6 @@
 # [ISSUE-030] 直前キャッシュによるオフライン閲覧保証（Pragmatic Offline-Read）と ADR-002 是正
 
-* **ステータス**: 🟣 `status: in-progress`
+* **ステータス**: ✅ `status: closed`
 * **種別**: 🟢 `type: feature` / 🛡️ `type: security` / 📚 `type: docs`
 * **担当者**: AIエージェント
 * **作成日**: 2026-10-03
