@@ -53,7 +53,7 @@ import {
   STOCK_SORT_OPTIONS,
   type StockSortKey,
 } from './core/stockSort';
-import { ApiError } from './api/client';
+import { api, ApiError } from './api/client';
 import type { StockItem, StockItemInput, AuthUser, RemainingLevel } from './api/schema';
 
 interface DashboardProps {
@@ -68,7 +68,13 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
   const [selectedShoppingCategory, setSelectedShoppingCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<StockSortKey>('category');
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+  const [conflictItem, setConflictItem] = useState<StockItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  const handleStartEdit = (item: StockItem) => {
+    setEditingItem(item);
+    setConflictItem(null);
+  };
 
   // Network status & Last synced timestamp
   const { isOffline } = useNetworkStatus();
@@ -210,7 +216,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
               size="sm"
               variant="outline"
               className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900 border-slate-200"
-              onClick={() => setEditingItem(item)}
+              onClick={() => handleStartEdit(item)}
               disabled={isOffline}
               title={isOffline ? 'オフラインのため編集できません' : '詳細編集'}
               aria-label={`${item.name}を編集`}
@@ -461,7 +467,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
 
                           <div className="flex items-center gap-1 shrink-0">
                             <button
-                              onClick={() => setEditingItem(item)}
+                              onClick={() => handleStartEdit(item)}
                               disabled={isOffline}
                               className={`p-1 transition-colors ${
                                 isOffline
@@ -789,7 +795,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                             size="sm"
                             variant="outline"
                             className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900 border-slate-200"
-                            onClick={() => setEditingItem(item)}
+                            onClick={() => handleStartEdit(item)}
                             disabled={isOffline}
                             title={isOffline ? 'オフラインのため編集できません' : '詳細編集'}
                             aria-label={`${item.name}を編集`}
@@ -823,20 +829,39 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
         {/* Detail Edit Modal */}
         <EditStockModal
           item={editingItem}
+          conflictItem={conflictItem}
           isOpen={editingItem !== null}
-          onClose={() => setEditingItem(null)}
+          onClose={() => {
+            setEditingItem(null);
+            setConflictItem(null);
+          }}
+          onClearConflict={() => setConflictItem(null)}
           onSave={(id, data) => {
             updateMutation.mutate(
               { id, data },
               {
                 onSuccess: () => {
                   setEditingItem(null);
+                  setConflictItem(null);
                 },
-                onError: (error) => {
-                  // 409 Conflict (楽観的排他制御競合) 発生時は古い version を保持したモーダルを閉じ、
-                  // 再取得された最新一覧をユーザーに確認させる（無限競合ループを防止）
+                onError: async (error) => {
+                  // 409 Conflict (楽観的排他制御競合) 発生時はモーダルを閉じずに入力データを保護
+                  // 最新のサーバーデータを取得して競合解決UI（差分表示＆最新上書き/取り込み）を提示
                   if (error instanceof ApiError && error.status === 409) {
-                    setEditingItem(null);
+                    try {
+                      const latestStocks = await api.getStocks();
+                      const latest = latestStocks.find((s) => s.id === id);
+                      if (latest) {
+                        setConflictItem(latest);
+                        return;
+                      }
+                    } catch {
+                      // ネットワーク不通時等のフォールバック: キャッシュ一覧から探索
+                    }
+                    const cached = allStocks.find((s) => s.id === id);
+                    if (cached) {
+                      setConflictItem(cached);
+                    }
                   }
                 },
               }

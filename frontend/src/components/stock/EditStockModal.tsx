@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Edit3, Gauge, Hash } from 'lucide-react';
+import { X, Calendar, Edit3, Gauge, Hash, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { STOCK_CATEGORIES, normalizeCategory } from '../../constants/categories';
@@ -13,16 +13,20 @@ import type { StockItem, StockItemInput, StockType, RemainingLevel } from '../..
 interface EditStockModalProps {
   isOpen: boolean;
   item: StockItem | null;
+  conflictItem?: StockItem | null;
   onClose: () => void;
   onSave: (id: number, data: StockItemInput) => void;
+  onClearConflict?: () => void;
   isSaving?: boolean;
 }
 
 export function EditStockModal({
   isOpen,
   item,
+  conflictItem,
   onClose,
   onSave,
+  onClearConflict,
   isSaving = false,
 }: EditStockModalProps) {
   const [name, setName] = useState('');
@@ -49,17 +53,24 @@ export function EditStockModal({
     }
   }, [item, isOpen]);
 
+  const handleCloseModal = () => {
+    if (!isSaving) {
+      onClearConflict?.();
+      onClose();
+    }
+  };
+
   // ESC キー押下で閉じる (保存中または非表示時は無効)
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !isSaving) {
-        onClose();
+        handleCloseModal();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, isSaving]);
+  }, [isOpen, isSaving]);
 
   if (!isOpen || !item) {
     return null;
@@ -67,25 +78,51 @@ export function EditStockModal({
 
   const isNameEmpty = !name.trim();
 
+  // 現在のフォーム入力内容から送信用 DTO を生成
+  const buildPayload = (targetVersion: number): StockItemInput => ({
+    name: name.trim(),
+    category,
+    stockType,
+    remainingLevel: stockType === 'REMAINING_LEVEL' ? remainingLevel : undefined,
+    quantity:
+      stockType === 'REMAINING_LEVEL'
+        ? remainingLevelToQuantity(remainingLevel)
+        : Math.max(0, quantity),
+    unit: unit.trim() || (stockType === 'REMAINING_LEVEL' ? '袋' : '個'),
+    minThreshold: stockType === 'REMAINING_LEVEL' ? 1 : Math.max(0, minThreshold),
+    expiryDate: expiryDate.trim() ? expiryDate.trim() : undefined,
+    memo: memo.trim() || undefined,
+    version: targetVersion,
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isNameEmpty || isSaving) return;
 
-    onSave(item.id, {
-      name: name.trim(),
-      category,
-      stockType,
-      remainingLevel: stockType === 'REMAINING_LEVEL' ? remainingLevel : undefined,
-      quantity:
-        stockType === 'REMAINING_LEVEL'
-          ? remainingLevelToQuantity(remainingLevel)
-          : Math.max(0, quantity),
-      unit: unit.trim() || (stockType === 'REMAINING_LEVEL' ? '袋' : '個'),
-      minThreshold: stockType === 'REMAINING_LEVEL' ? 1 : Math.max(0, minThreshold),
-      expiryDate: expiryDate.trim() ? expiryDate.trim() : undefined,
-      memo: memo.trim() || undefined,
-      version: item.version, // 楽観的排他制御
-    });
+    // 競合発生時は最新サーバーバージョンを採用、通常時は item.version
+    const targetVersion = conflictItem ? conflictItem.version : item.version;
+    onSave(item.id, buildPayload(targetVersion));
+  };
+
+  // 競合解決 1: 他端末の最新データを取り込んで再編集
+  const handleAcceptLatest = () => {
+    if (!conflictItem) return;
+    setName(conflictItem.name);
+    setCategory(normalizeCategory(conflictItem.category));
+    setStockType(conflictItem.stockType || 'QUANTITY');
+    setRemainingLevel(conflictItem.remainingLevel || 'FULL');
+    setQuantity(conflictItem.quantity);
+    setUnit(conflictItem.unit || (conflictItem.stockType === 'REMAINING_LEVEL' ? '袋' : '個'));
+    setMinThreshold(conflictItem.minThreshold);
+    setExpiryDate(conflictItem.expiryDate || '');
+    setMemo(conflictItem.memo || '');
+    onClearConflict?.();
+  };
+
+  // 競合解決 2: 自分の入力内容のまま最新バージョンで上書き保存
+  const handleForceOverwrite = () => {
+    if (isNameEmpty || isSaving || !conflictItem) return;
+    onSave(item.id, buildPayload(conflictItem.version));
   };
 
   const handleClearExpiry = () => {
@@ -95,11 +132,7 @@ export function EditStockModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={() => {
-        if (!isSaving) {
-          onClose();
-        }
-      }}
+      onClick={handleCloseModal}
     >
       <div
         role="dialog"
@@ -124,11 +157,7 @@ export function EditStockModal({
             </div>
           </div>
           <button
-            onClick={() => {
-              if (!isSaving) {
-                onClose();
-              }
-            }}
+            onClick={handleCloseModal}
             disabled={isSaving}
             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors disabled:opacity-40 disabled:pointer-events-none"
             title="閉じる"
@@ -141,6 +170,78 @@ export function EditStockModal({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+          {/* 排他制御 409 Conflict 競合バナー */}
+          {conflictItem && (
+            <div
+              data-testid="conflict-banner"
+              className="rounded-xl border border-amber-300 bg-amber-50/90 p-4 text-amber-900 shadow-sm space-y-3 animate-in fade-in slide-in-from-top-2 duration-200"
+            >
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-bold text-amber-900">
+                    【排他制御警告】他の端末によって内容が更新されました
+                  </h3>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    入力中の内容は保持されています。他端末による最新の変更内容を確認の上、解決方法を選択してください。
+                  </p>
+                </div>
+              </div>
+
+              {/* 他端末の最新データ概要 */}
+              <div className="rounded-lg bg-white/90 border border-amber-200 p-3 text-xs space-y-1.5 shadow-xs">
+                <div className="font-semibold text-slate-700">他端末による最新の状態：</div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-600">
+                  <div>
+                    <span className="text-slate-400">品名:</span> {conflictItem.name}
+                  </div>
+                  <div>
+                    <span className="text-slate-400">カテゴリ:</span> {conflictItem.category}
+                  </div>
+                  <div>
+                    <span className="text-slate-400">数量/残量:</span>{' '}
+                    {conflictItem.stockType === 'REMAINING_LEVEL' && conflictItem.remainingLevel
+                      ? `${REMAINING_LEVEL_CONFIGS[conflictItem.remainingLevel]?.label || conflictItem.remainingLevel} (${conflictItem.unit})`
+                      : `${conflictItem.quantity} ${conflictItem.unit}`}
+                  </div>
+                  <div>
+                    <span className="text-slate-400">賞味期限:</span>{' '}
+                    {conflictItem.expiryDate || '未設定'}
+                  </div>
+                </div>
+                {conflictItem.memo && (
+                  <div className="text-slate-600 pt-1 border-t border-slate-100">
+                    <span className="text-slate-400">メモ:</span> {conflictItem.memo}
+                  </div>
+                )}
+              </div>
+
+              {/* 競合解決アクション */}
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAcceptLatest}
+                  disabled={isSaving}
+                  className="h-8 text-xs bg-white border-amber-300 text-amber-900 hover:bg-amber-100"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                  最新データを取り込む
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleForceOverwrite}
+                  disabled={isNameEmpty || isSaving}
+                  className="h-8 text-xs bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
+                >
+                  自分の入力で上書き保存
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* 品名 */}
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1.5">
@@ -355,7 +456,7 @@ export function EditStockModal({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={handleCloseModal}
               disabled={isSaving}
             >
               キャンセル

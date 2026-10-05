@@ -58,7 +58,6 @@ export function useUpdateStock() {
     },
     onError: (error: unknown) => {
       if (error instanceof ApiError && error.status === 409) {
-        alert('【排他制御警告】他の端末によって既にデータが更新されています。最新情報を再取得しました。');
         queryClient.invalidateQueries({ queryKey: STOCK_KEYS.all });
       }
     },
@@ -71,6 +70,11 @@ export function useConsumeStock() {
     mutationFn: ({ id, amount }: { id: number; amount?: number }) => api.consumeStock(id, amount),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: STOCK_KEYS.all });
+    },
+    onError: (error: unknown) => {
+      if (error instanceof ApiError && error.status === 409) {
+        queryClient.invalidateQueries({ queryKey: STOCK_KEYS.all });
+      }
     },
   });
 }
