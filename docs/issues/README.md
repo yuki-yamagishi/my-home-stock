@@ -31,6 +31,7 @@
 | **[ISSUE-015](ISSUE-015_auto_update_review_loop_submodule_workflow/issue.md)** | antigravity-review-loop 自動更新 GitHub Actions ワークフローの導入 | ✅ `status: closed` | 🚀 `ci` | AIエージェント | 2026-09-18 |
 | **[ISSUE-028](ISSUE-028_cors_strict_origin_and_csrf_protection/issue.md)** | CORS オリジン厳格化（DuckDNS ワイルドカード排除）および Cookie セッションに対する CSRF 保護の導入 | ✅ `status: closed` | 🛡️ `type: security` | AIエージェント | 2026-10-03 |
 | **[ISSUE-030](ISSUE-030_offline_read_capable_pwa/issue.md)** | 直前キャッシュによるオフライン閲覧保証（Pragmatic Offline-Read）と ADR-002 是正 | ✅ `status: closed` | 🟢 `feature` | AIエージェント | 2026-10-03 |
+| **[ISSUE-033](ISSUE-033_optimistic_lock_conflict_resolution_ux/issue.md)** | 楽観排他制御（409 Conflict）発生時の入力データ保護と競合解決UIの実装 | 🔵 `status: ready` | 🟢 `feature` | AIエージェント | 2026-10-05 |
 
 ---
 
