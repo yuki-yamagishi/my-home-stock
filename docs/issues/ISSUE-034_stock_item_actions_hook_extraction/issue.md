@@ -68,10 +68,10 @@
 
 ### 5.2. PR作成前プロセス完了基準 (Pre-PR Process DoD)
 
-- [ ] 対象スコープの単体テスト（`frontend/tests/hooks/useStockItemActions.test.ts`）が作成され、全件 PASS すること。
-- [ ] `App.tsx` を新設フック呼び出しにリファクタリング後、既存の全テスト（コンポーネントテスト含む）が PASS すること。
-- [ ] プロジェクトの型検査（`npm run check:fast`）およびドキュメント整合性（`npm run check:docs`）が PASS すること。
-- [ ] 4軸ドキュメント（`issue.md`, `pre_verification.md`, `plan.md`, `walkthrough.md`）の整備が完了していること。
+- [x] 対象スコープの単体テスト（`frontend/tests/hooks/useStockItemActions.test.ts`）が作成され、全件 PASS すること。
+- [x] `App.tsx` を新設フック呼び出しにリファクタリング後、既存の全テスト（コンポーネントテスト含む）が PASS すること。
+- [x] プロジェクトの型検査（`npm run check:fast`）およびドキュメント整合性（`npm run check:docs`）が PASS すること。
+- [x] 4軸ドキュメント（`issue.md`, `pre_verification.md`, `plan.md`, `walkthrough.md`）の整備が完了していること。
 
 ### 5.3. マージ前完了ゲート (Pre-Merge Gate)
 
