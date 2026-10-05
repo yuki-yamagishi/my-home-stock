@@ -849,14 +849,14 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                   // 最新のサーバーデータを取得して競合解決UI（差分表示＆最新上書き/取り込み）を提示
                   if (error instanceof ApiError && error.status === 409) {
                     try {
-                      const latestStocks = await api.getStocks();
-                      const latest = latestStocks.find((s) => s.id === id);
+                      // 単一アイテム取得エンドポイントで最新データをピンポイント取得
+                      const latest = await api.getStockById(id);
                       if (latest) {
                         setConflictItem(latest);
                         return;
                       }
                     } catch {
-                      // ネットワーク不通時等のフォールバック: キャッシュ一覧から探索
+                      // フォールバック: キャッシュ一覧から探索
                     }
                     const cached = allStocks.find((s) => s.id === id);
                     if (cached) {

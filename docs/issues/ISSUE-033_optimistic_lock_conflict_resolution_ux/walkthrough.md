@@ -55,3 +55,6 @@
 | :--- | :--- | :--- | :--- |
 | 初期実装 | 409 Conflict 発生時の alert() 表示と入力データ破棄 | alert() 撤廃、モーダル維持による入力保護、競合バナーおよび解決アクション（取り込み／上書き）を新設 | `useStockItems.ts`, `EditStockModal.tsx`, `App.tsx` |
 | 型検査 | TypeScript Strict による未使用 import および型不足エラー | 未使用 `React` 削除、テストモックデータに `createdAt`, `updatedAt` を追加 | `EditStockModal.test.tsx` |
+| `[must]` (監査合議) | 「最新データを取り込む」押下後に通常送信すると古い `item.version` が渡され再度 409 になる欠陥 | `currentVersion` state を導入し、`handleAcceptLatest` で最新バージョンを保持・引き継ぎ、通常送信時にも最新 version を適用 | `EditStockModal.tsx` |
+| `[must]` (監査合議) | 「最新データ取り込み後に再編集して送信した場合に最新バージョン（version: 2）で保存されること」の検証テスト欠落 | 取り込み後にフォーム追記して通常送信し、最新バージョン (2) で `onSave` が呼ばれることを検証するテストケースを拡充 | `EditStockModal.test.tsx` |
+| `[should]` (監査合議) | 409 発生時の最新データ再取得における全件取得 API 呼び出しの非効率性 | 単一アイテム取得 API `api.getStockById(id)` を優先呼び出しするよう最適化 | `App.tsx` |

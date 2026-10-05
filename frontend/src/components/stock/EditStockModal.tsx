@@ -38,6 +38,7 @@ export function EditStockModal({
   const [minThreshold, setMinThreshold] = useState(1);
   const [expiryDate, setExpiryDate] = useState('');
   const [memo, setMemo] = useState('');
+  const [currentVersion, setCurrentVersion] = useState<number>(item?.version ?? 0);
 
   useEffect(() => {
     if (item && isOpen) {
@@ -50,6 +51,7 @@ export function EditStockModal({
       setMinThreshold(item.minThreshold);
       setExpiryDate(item.expiryDate || '');
       setMemo(item.memo || '');
+      setCurrentVersion(item.version);
     }
   }, [item, isOpen]);
 
@@ -99,8 +101,8 @@ export function EditStockModal({
     e.preventDefault();
     if (isNameEmpty || isSaving) return;
 
-    // 競合発生時は最新サーバーバージョンを採用、通常時は item.version
-    const targetVersion = conflictItem ? conflictItem.version : item.version;
+    // 競合発生時は最新サーバーバージョンを採用、競合解決後は currentVersion
+    const targetVersion = conflictItem ? conflictItem.version : currentVersion;
     onSave(item.id, buildPayload(targetVersion));
   };
 
@@ -116,6 +118,7 @@ export function EditStockModal({
     setMinThreshold(conflictItem.minThreshold);
     setExpiryDate(conflictItem.expiryDate || '');
     setMemo(conflictItem.memo || '');
+    setCurrentVersion(conflictItem.version); // 最新バージョンを保持して以後の再保存での再競合を防止！
     onClearConflict?.();
   };
 

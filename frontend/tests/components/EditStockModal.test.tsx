@@ -109,12 +109,12 @@ describe('EditStockModal Conflict Resolution UX (ISSUE-033)', () => {
     expect(screen.getByDisplayValue('5')).toBeTruthy();
   });
 
-  it('accepts latest server data and clears conflict when "最新データを取り込む" is clicked', () => {
+  it('accepts latest server data, clears conflict, and retains latest version (2) on subsequent submit', () => {
     const handleClose = vi.fn();
     const handleSave = vi.fn();
     const handleClearConflict = vi.fn();
 
-    render(
+    const { rerender } = render(
       <EditStockModal
         isOpen={true}
         item={baseItem}
@@ -138,6 +138,34 @@ describe('EditStockModal Conflict Resolution UX (ISSUE-033)', () => {
     expect(screen.getAllByDisplayValue('1').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByDisplayValue('2026-10-12')).toBeTruthy();
     expect(handleClearConflict).toHaveBeenCalledTimes(1);
+
+    // 親コンポーネントが onClearConflict を受けて conflictItem を null にした状態を再現
+    rerender(
+      <EditStockModal
+        isOpen={true}
+        item={baseItem}
+        conflictItem={null}
+        onClose={handleClose}
+        onSave={handleSave}
+        onClearConflict={handleClearConflict}
+      />
+    );
+
+    // ユーザーが最新データを取り込んだ後に追記・再編集
+    const newMemoInput = screen.getByDisplayValue('他端末で追加されたメモ');
+    fireEvent.change(newMemoInput, { target: { value: '最新データに追記したメモ' } });
+
+    // 通常の「更新する」ボタンをクリック
+    const submitBtn = screen.getByRole('button', { name: '更新する' });
+    fireEvent.click(submitBtn);
+
+    // 古い item.version (1) ではなく、最新の conflictServerItem.version (2) が送信されること！
+    expect(handleSave).toHaveBeenCalledTimes(1);
+    expect(handleSave).toHaveBeenCalledWith(1, expect.objectContaining({
+      name: '牛乳',
+      memo: '最新データに追記したメモ',
+      version: 2, // 破綻シナリオを解消し、最新バージョンが正しく維持されている！
+    }));
   });
 
   it('submits form with latest server version when "自分の入力で上書き保存" is clicked', () => {
