@@ -49,7 +49,7 @@
 - **シナリオ 3: 残量4段階アイテムの直接更新 (handleSetRemainingLevel)**
   - **Given**: 残量管理アイテム（`id: 2, remainingLevel: 'LOW', version: 1`）が存在し、オンライン状態である。
   - **When**: `handleSetRemainingLevel(item, 'FULL')` を呼び出す。
-  - **Then**: `updateMutation.mutate` が呼び出され、`remainingLevel: 'FULL'`, `quantity: 100`（`remainingLevelToQuantity('FULL')` の結果）, `version: 1`, `stockType: 'REMAINING_LEVEL'` を含む更新ペイロードが送信される。
+  - **Then**: `updateMutation.mutate` が呼び出され、`remainingLevel: 'FULL'`, `quantity: 3`（`remainingLevelToQuantity('FULL')` の結果）, `version: 1`, `stockType: 'REMAINING_LEVEL'` を含む更新ペイロードが送信される。
 
 - **シナリオ 4: 削除操作 (handleDelete) と確認ダイアログ**
   - **Given**: 削除対象アイテムの ID（`id: 5`）が存在する。
