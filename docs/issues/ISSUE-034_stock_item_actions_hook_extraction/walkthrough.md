@@ -30,6 +30,7 @@
 | # | レビュアー | 指摘内容 | 重要度 | 対応方針・実施内容 | 状態 |
 | :- | :--- | :--- | :--- | :--- | :--- |
 | 1 | fleet_dor_auditor | 各 mutation の pending 状態を参照して二重送信を防止する防衛的実装の適用提案 | [imo] | `isUpdating`, `isConsuming`, `isDeleting` による操作ガードを実装し、単体テストで二重送信防止を検証 | 解決済 |
+| 2 | ユーザーレビュー | 削除確認ダイアログの DI オプションおよびオーバーロードの過剰設計（YAGNI）の指摘 | [must] | `confirmDelete` オプションおよび `StockItem` オブジェクト引数を削除し、標準の `window.confirm` と `id: number` 引数にシンプル化。テストも標準の `vi.spyOn(window, 'confirm')` に改修。未使用フラグ `isPending` を削除 | 解決済 |
 
 ---
 

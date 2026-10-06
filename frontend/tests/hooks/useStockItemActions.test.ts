@@ -185,48 +185,43 @@ describe('useStockItemActions hook (ISSUE-034)', () => {
     });
   });
 
-  describe('Scenario 4: handleDelete / remove (with confirmation dialog)', () => {
-    it('calls deleteMutation when confirmation is confirmed', () => {
-      const confirmDeleteMock = vi.fn().mockReturnValue(true);
-      const { result } = renderHook(() =>
-        useStockItemActions({ confirmDelete: confirmDeleteMock })
-      );
+  describe('Scenario 4: handleDelete / remove (with standard window.confirm)', () => {
+    it('calls deleteMutation when window.confirm returns true', () => {
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const { result } = renderHook(() => useStockItemActions());
 
       act(() => {
         result.current.handleDelete(10);
       });
 
-      expect(confirmDeleteMock).toHaveBeenCalledWith('この在庫アイテムを削除してもよろしいですか？');
+      expect(confirmSpy).toHaveBeenCalledWith('この在庫アイテムを削除してもよろしいですか？');
       expect(mockDeleteMutate).toHaveBeenCalledTimes(1);
       expect(mockDeleteMutate).toHaveBeenCalledWith(10);
     });
 
-    it('does not call deleteMutation when confirmation is cancelled', () => {
-      const confirmDeleteMock = vi.fn().mockReturnValue(false);
-      const { result } = renderHook(() =>
-        useStockItemActions({ confirmDelete: confirmDeleteMock })
-      );
+    it('does not call deleteMutation when window.confirm returns false', () => {
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const { result } = renderHook(() => useStockItemActions());
 
       act(() => {
         result.current.handleDelete(10);
       });
 
-      expect(confirmDeleteMock).toHaveBeenCalledTimes(1);
+      expect(confirmSpy).toHaveBeenCalledTimes(1);
       expect(mockDeleteMutate).not.toHaveBeenCalled();
     });
 
-    it('accepts StockItem object via remove alias', () => {
-      const confirmDeleteMock = vi.fn().mockReturnValue(true);
-      const { result } = renderHook(() =>
-        useStockItemActions({ confirmDelete: confirmDeleteMock })
-      );
+    it('works via remove alias', () => {
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const { result } = renderHook(() => useStockItemActions());
 
       act(() => {
-        result.current.remove(baseQuantityItem);
+        result.current.remove(10);
       });
 
+      expect(confirmSpy).toHaveBeenCalledTimes(1);
       expect(mockDeleteMutate).toHaveBeenCalledTimes(1);
-      expect(mockDeleteMutate).toHaveBeenCalledWith(1);
+      expect(mockDeleteMutate).toHaveBeenCalledWith(10);
     });
   });
 
@@ -240,10 +235,8 @@ describe('useStockItemActions hook (ISSUE-034)', () => {
     });
 
     it('guards all operations when offline', () => {
-      const confirmDeleteMock = vi.fn().mockReturnValue(true);
-      const { result } = renderHook(() =>
-        useStockItemActions({ confirmDelete: confirmDeleteMock })
-      );
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const { result } = renderHook(() => useStockItemActions());
 
       act(() => {
         result.current.handleConsume(baseQuantityItem);
@@ -254,7 +247,7 @@ describe('useStockItemActions hook (ISSUE-034)', () => {
 
       expect(mockConsumeMutate).not.toHaveBeenCalled();
       expect(mockUpdateMutate).not.toHaveBeenCalled();
-      expect(confirmDeleteMock).not.toHaveBeenCalled();
+      expect(confirmSpy).not.toHaveBeenCalled();
       expect(mockDeleteMutate).not.toHaveBeenCalled();
     });
   });
@@ -269,7 +262,6 @@ describe('useStockItemActions hook (ISSUE-034)', () => {
       const { result } = renderHook(() => useStockItemActions());
 
       expect(result.current.isUpdating).toBe(true);
-      expect(result.current.isPending).toBe(true);
 
       act(() => {
         result.current.handleAddOne(baseQuantityItem);
@@ -288,7 +280,6 @@ describe('useStockItemActions hook (ISSUE-034)', () => {
       const { result } = renderHook(() => useStockItemActions());
 
       expect(result.current.isConsuming).toBe(true);
-      expect(result.current.isPending).toBe(true);
 
       act(() => {
         result.current.handleConsume(baseQuantityItem);
@@ -303,19 +294,16 @@ describe('useStockItemActions hook (ISSUE-034)', () => {
         isPending: true,
       } as any);
 
-      const confirmDeleteMock = vi.fn().mockReturnValue(true);
-      const { result } = renderHook(() =>
-        useStockItemActions({ confirmDelete: confirmDeleteMock })
-      );
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const { result } = renderHook(() => useStockItemActions());
 
       expect(result.current.isDeleting).toBe(true);
-      expect(result.current.isPending).toBe(true);
 
       act(() => {
         result.current.handleDelete(1);
       });
 
-      expect(confirmDeleteMock).not.toHaveBeenCalled();
+      expect(confirmSpy).not.toHaveBeenCalled();
       expect(mockDeleteMutate).not.toHaveBeenCalled();
     });
   });
