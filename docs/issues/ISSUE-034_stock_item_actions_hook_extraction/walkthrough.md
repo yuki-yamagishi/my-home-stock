@@ -8,7 +8,7 @@
   1. `frontend/src/hooks/useStockItemActions.ts`:
      - 在庫の消費（`handleConsume`/`consume`）、+1加算（`handleAddOne`/`addOne`）、残量4段階指定更新（`handleSetRemainingLevel`/`setRemainingLevel`）、削除（`handleDelete`/`remove`）を統合カプセル化。
      - 楽観排他制御用 `version` の引き継ぎ（[ADR-0003]）、残量から数量への自動変換 `remainingLevelToQuantity`、およびネットワーク切断時の安全ガード（[ADR-0002]）をフック内で自動担保。
-     - 各 mutation の `isPending` に基づく操作中の多重実行防止ガード（`isUpdating`, `isConsuming`, `isDeleting`, `isPending`）を実装。
+     - 各 mutation の `isPending` に基づく操作中の多重実行防止ガード（`isUpdating`, `isConsuming`, `isDeleting`）を実装。
   2. `frontend/tests/hooks/useStockItemActions.test.ts`:
      - Given-When-Then シナリオに基づく 13 件の単体テストを作成し、全ケース PASS。
   3. `frontend/src/App.tsx`:
@@ -30,7 +30,7 @@
 | # | レビュアー | 指摘内容 | 重要度 | 対応方針・実施内容 | 状態 |
 | :- | :--- | :--- | :--- | :--- | :--- |
 | 1 | fleet_dor_auditor | 各 mutation の pending 状態を参照して二重送信を防止する防衛的実装の適用提案 | [imo] | `isUpdating`, `isConsuming`, `isDeleting` による操作ガードを実装し、単体テストで二重送信防止を検証 | 解決済 |
-| 2 | ユーザーレビュー | 削除確認ダイアログの DI オプションおよびオーバーロードの過剰設計（YAGNI）の指摘 | [must] | `confirmDelete` オプションおよび `StockItem` オブジェクト引数を削除し、標準の `window.confirm` と `id: number` 引数にシンプル化。テストも標準の `vi.spyOn(window, 'confirm')` に改修。未使用フラグ `isPending` を削除 | 解決済 |
+| 2 | ユーザーレビュー | 削除確認ダイアログの DI オプションおよびオーバーロードの過剰設計（YAGNI）の指摘 | [must] | 初期実装で誤って持ち込んだ過剰な DI オプション（`confirmDelete`）および `StockItem` 引数オーバーロードを撤回し、標準の `window.confirm` と `id: number` 引数にシンプル化。テストも標準の `vi.spyOn(window, 'confirm')` に改修。未使用フラグ `isPending` を削除 | 解決済 |
 
 ---
 
