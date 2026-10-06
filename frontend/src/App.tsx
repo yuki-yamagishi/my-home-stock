@@ -32,17 +32,15 @@ import {
   useShoppingList,
   useExpiringItems,
   useCreateStock,
-  useConsumeStock,
   useUpdateStock,
-  useDeleteStock,
 } from './hooks/useStockItems';
+import { useStockItemActions } from './hooks/useStockItemActions';
 import {
   isShortage,
   getExpiryStatus,
   calculateStockSummary,
   REMAINING_LEVEL_ORDER,
   REMAINING_LEVEL_CONFIGS,
-  remainingLevelToQuantity,
 } from './core/stockStatus';
 import {
   groupShoppingListByCategory,
@@ -54,7 +52,7 @@ import {
   type StockSortKey,
 } from './core/stockSort';
 import { api, ApiError } from './api/client';
-import type { StockItem, StockItemInput, AuthUser, RemainingLevel } from './api/schema';
+import type { StockItem, StockItemInput, AuthUser } from './api/schema';
 
 interface DashboardProps {
   user: AuthUser;
@@ -92,11 +90,18 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
     }
   }, [allStocks, isOffline]);
 
-  // Mutations
+  // Mutations & Actions
   const createMutation = useCreateStock();
-  const consumeMutation = useConsumeStock();
   const updateMutation = useUpdateStock();
-  const deleteMutation = useDeleteStock();
+  const {
+    handleConsume,
+    handleAddOne,
+    handleSetRemainingLevel,
+    handleDelete,
+    isUpdating,
+    isConsuming,
+    isDeleting,
+  } = useStockItemActions();
 
   const categories = useMemo(() => {
     const set = new Set<string>(STOCK_CATEGORIES);
@@ -134,52 +139,6 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
         setIsCreateOpen(false);
       },
     });
-  };
-
-  const handleConsume = (item: StockItem) => {
-    consumeMutation.mutate({ id: item.id, amount: 1 });
-  };
-
-  const handleAddOne = (item: StockItem) => {
-    updateMutation.mutate({
-      id: item.id,
-      data: {
-        name: item.name,
-        category: item.category,
-        stockType: 'QUANTITY',
-        quantity: item.quantity + 1,
-        unit: item.unit,
-        minThreshold: item.minThreshold,
-        memo: item.memo,
-        expiryDate: item.expiryDate,
-        version: item.version, // Required for optimistic lock!
-      },
-    });
-  };
-
-  const handleSetRemainingLevel = (item: StockItem, newLevel: RemainingLevel) => {
-    if (updateMutation.isPending) return;
-    updateMutation.mutate({
-      id: item.id,
-      data: {
-        name: item.name,
-        category: item.category,
-        stockType: 'REMAINING_LEVEL',
-        remainingLevel: newLevel,
-        quantity: remainingLevelToQuantity(newLevel),
-        unit: item.unit,
-        minThreshold: item.minThreshold,
-        memo: item.memo,
-        expiryDate: item.expiryDate,
-        version: item.version,
-      },
-    });
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm('この在庫アイテムを削除してもよろしいですか？')) {
-      deleteMutation.mutate(id);
-    }
   };
 
   const renderShoppingCard = (item: StockItem) => {
@@ -229,7 +188,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                 size="sm"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-sm"
                 onClick={() => handleSetRemainingLevel(item, 'FULL')}
-                disabled={isOffline || updateMutation.isPending}
+                disabled={isOffline || isUpdating}
                 title={isOffline ? 'オフラインのため更新できません' : '残量を「十分」に復帰させます'}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -240,7 +199,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                 size="sm"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={() => handleAddOne(item)}
-                disabled={isOffline || updateMutation.isPending}
+                disabled={isOffline || isUpdating}
                 title={isOffline ? 'オフラインのため更新できません' : '購入完了 (+1)'}
               >
                 購入完了 (+1)
@@ -481,7 +440,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                             </button>
                             <button
                               onClick={() => handleDelete(item.id)}
-                              disabled={isOffline || deleteMutation.isPending}
+                              disabled={isOffline || isDeleting}
                               className={`p-1 transition-colors ${
                                 isOffline
                                   ? 'text-slate-300 cursor-not-allowed'
@@ -514,7 +473,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                                 onClick={() => handleConsume(item)}
                                 disabled={
                                   isOffline ||
-                                  consumeMutation.isPending ||
+                                  isConsuming ||
                                   item.remainingLevel === 'EMPTY'
                                 }
                                 title={isOffline ? 'オフラインのため操作できません' : '残量を1段階下げる'}
@@ -534,7 +493,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                                     key={lvl}
                                     type="button"
                                     onClick={() => handleSetRemainingLevel(item, lvl)}
-                                    disabled={isOffline || updateMutation.isPending}
+                                    disabled={isOffline || isUpdating}
                                     className={`py-1 px-1 rounded-lg text-xs font-bold transition-all text-center ${
                                       isCurrent
                                         ? `${cfg.colorClasses.activeButton}`
@@ -574,7 +533,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                                   variant="outline"
                                   className="h-8 w-8 p-0"
                                   onClick={() => handleConsume(item)}
-                                  disabled={isOffline || item.quantity <= 0 || consumeMutation.isPending}
+                                  disabled={isOffline || item.quantity <= 0 || isConsuming}
                                   title={isOffline ? 'オフラインのため操作できません' : '1つ減らす'}
                                 >
                                   <Minus className="h-3.5 w-3.5" />
@@ -584,7 +543,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                                   variant="outline"
                                   className="h-8 w-8 p-0"
                                   onClick={() => handleAddOne(item)}
-                                  disabled={isOffline || updateMutation.isPending}
+                                  disabled={isOffline || isUpdating}
                                   title={isOffline ? 'オフラインのため操作できません' : '1つ増やす'}
                                 >
                                   <Plus className="h-3.5 w-3.5" />
@@ -810,7 +769,7 @@ function Dashboard({ user, onOpenMembersModal }: DashboardProps) {
                             disabled={
                               isOffline ||
                               (isLevel ? item.remainingLevel === 'EMPTY' : item.quantity <= 0) ||
-                              consumeMutation.isPending
+                              isConsuming
                             }
                             title={isOffline ? 'オフラインのため操作できません' : '消費 (-1)'}
                           >
